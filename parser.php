@@ -1,7 +1,8 @@
 <?php
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
-define("MISSING_PARAM", 10, false);
+define("PROCCESS_OK", 0, false);
+define("PARAM_ERROR", 10, false);
 define("INPUT_ERROR", 11, false);
 define("OUTPUT_ERROR", 12, false);
 define("INTERNAL_ERROR", 99, false);
@@ -13,7 +14,17 @@ define("ERROR_LEX_SYNT", 23, false);
 
 function displayHelp()
 {
-    echo "TADY BUDE NEKDY NAPOVEDA\n";
+    echo "=== NAPOVEDA KE SKRIPTU parse.php ===\n";
+    echo "Skript nacita zdrojovy kod v jazyce IPPcode23, zkontroluje jeho lexikalni a syntaktickou spravnost.\n";
+    echo "Pokud ve kodu nebyla chyba, prepise jej na standardni vystup ve formatu XML.\n";
+    echo "Pro spusteni skriptu pouzijte nasledujici prikaz:\n";
+    echo "php8.1 parse.php [volitelny parametr] <[vstupni soubor] >[vystupni soubor]\n";
+}
+
+function errorExit($exitText, $errorNumber)
+{
+    fprintf(STDERR, "%s", $exitText);
+    exit($errorNumber);
 }
 
 function checkArguments($argc, $argv)
@@ -21,25 +32,22 @@ function checkArguments($argc, $argv)
     if($argc > 1)
     {
         if(($argc == 2) && ($argv[1] == "--help"))
+        {
             displayHelp();
+            exit(PROCCESS_OK);
+        }
         else
-            echo "MAME JINE ARGUMENTY!\n";
-    }
-    else
-    {
-        echo "ARGUMENTY NEJSOU\n";
+            errorExit("SPATNE ZADANY PARAMETR!\n", PARAM_ERROR);
     }
 }
 
 ####################### PSEUDOMAIN #######################
 
-echo "Tohle je start programu.\n";
-
 $xml = new XMLWriter();
 $xml->openMemory();
-$xml->startDocument('1.0', 'utf-8');
+$xml->startDocument('1.0', 'UTF-8');
 $xml->setIndent(true);
 $xml->startElement('program');
-$xml->writeAttribute('language', 'IPPcode22');
+$xml->writeAttribute('language', 'IPPcode23');
 
 checkArguments($argc, $argv);
