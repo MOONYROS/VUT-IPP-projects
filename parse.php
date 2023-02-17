@@ -1,5 +1,7 @@
 <?php
 
+define("FILENAME", "parse-only/write_test.src", false);
+
 # NAVRATY STEJNE PRO OBA SKRIPTY
 define("PROCCESS_OK", 0, false);
 define("PARAM_ERROR", 10, false);
@@ -41,7 +43,16 @@ function checkArguments($argc, $argv)
     }
 }
 
+function checkHeader($line)
+{
+
+}
+
 ####################### PSEUDOMAIN #######################
+
+echo "START SKRIPTU parse.php\n";
+
+checkArguments($argc, $argv);
 
 $xml = new XMLWriter();
 $xml->openMemory();
@@ -50,4 +61,20 @@ $xml->setIndent(true);
 $xml->startElement('program');
 $xml->writeAttribute('language', 'IPPcode23');
 
-checkArguments($argc, $argv);
+$lines = file(FILENAME);
+if(!$lines)
+    errorExit("NEPODARILO SE PRECIST DATA\n", INPUT_ERROR);
+
+echo "SOUBOR NACTEN\n";
+
+for($i = 0; $i < count($lines); $i++)
+{
+    echo "RADEK $i: $lines[$i]";
+
+    $lines[$i] = preg_replace("/#.*/", "", $lines[$i]); # odstraneni komentare
+    $lines[$i] = trim($lines[$i]);
+
+    # kontrola vstupu
+    if($i == 1)
+        checkHeader($lines[$i]);
+}
