@@ -14,7 +14,7 @@ define("HEADER_ERROR", 21, false);
 define("UNKNOWN_OPCODE", 22, false);
 define("ERROR_LEX_SYNT", 23, false);
 
-define("PRINT_ENABLE", true, false);
+define("PRINT_ENABLE", 1, false);
 function myPrint($text)
 {
     if(PRINT_ENABLE)
@@ -28,6 +28,13 @@ function displayHelp()
     echo "Pokud ve kodu nebyla chyba, prepise jej na standardni vystup ve formatu XML.\n";
     echo "Pro spusteni skriptu pouzijte nasledujici prikaz:\n";
     echo "php8.1 parse.php [volitelny parametr] <[vstupni soubor] >[vystupni soubor]\n";
+}
+
+function instructionXML($xml, $order, $lineElements)
+{
+    $xml->startElement("instruction");
+    $xml->writeAttribute("order", $order);
+    $xml->writeAttribute("opcode", $lineElements[0]);
 }
 
 function errorExit($exitText, $errorNumber)
@@ -59,6 +66,35 @@ function checkHeader($lineElements)
     }
     else
         errorExit("Spatna hlavicka programu! Uvodni radek musi obsahovat pouze identifikator jazyka.\n", HEADER_ERROR);
+}
+
+function matchVar($xml, $arg, $pos) # TODO
+{
+    /*if(preg_match("^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
+    {
+        $xml->startElement($pos);
+        $xml->writeAttribute("type", "var");
+        $xml->text($arg[$pos]);
+        $xml->endElement();
+    }
+    else
+        errorExit("Spatne zadana promenna!", ERROR_LEX_SYNT); */
+}
+
+function matchSymb($arg, $pos) # TODO
+{
+
+}
+
+function matchLabel($arg, $pos) # TODO
+{
+
+}
+
+function checkOperands($array, $number, $message)
+{
+    if(count($array) != $number)
+        errorExit("Spatny pocet operandu! $message\n", ERROR_LEX_SYNT);
 }
 
 ####################### PSEUDOMAIN #######################
@@ -104,6 +140,7 @@ for($i = 0; $i < count($lines); $i++)
 
             switch(strtoupper($lineElements[0]))
             {
+                # INSTRUKCE S <var> <symb1> <symb2>
                 case "ADD":
                 case "SUB":
                 case "MUL":
@@ -117,49 +154,71 @@ for($i = 0; $i < count($lines); $i++)
                 case "STR2INT":
                 case "CONCAT":
                 case "GETCHAR":
-                case "SETCHAR":
+                case "SETCHAR": # TODO
                     myPrint("var symb1 symb2");
+                    checkOperands($lineElements, 4, "Ocekavaji se 3 operandy za instrukci.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchVar($xml, $lineElements, 1);
+                    matchSymb($lineElements, 2);
+                    matchSymb($lineElements, 3);
                     break;
+                # INSTRUKCE BEZ OPERANDU
                 case "CREATEFRAME":
                 case "PUSHFRAME":
                 case "POPFRAME":
                 case "RETURN":
                 case "BREAK":
                     myPrint("*nema argumenty*");
+                    checkOperands($lineElements, 1, "Neocekava se zadny operand.");
+                    instructionXML($xml, $order, $lineElements);
                     break;
+                # INSTRUKCE S <var> <symb>
                 case "MOVE":
                 case "INT2CHAR":
                 case "STRLEN":
-                case "TYPE":
+                case "TYPE": # TODO
                     myPrint("var symb");
+                    checkOperands($lineElements, 3, "Ocekavaji se 2 operandy.");
                     break;
+                # INSTRUKCE S <symb>
                 case "PUSHS":
                 case "WRITE":
                 case "EXIT":
-                case "DPRINT":
+                case "DPRINT": # TODO
                     myPrint("symb");
+                    checkOperands($lineElements, 2, "Ocekava se 1 operand.");
                     break;
+                # INSTRUKCE S <label>
                 case "CALL":
                 case "LABEL":
-                case "JUMP":
+                case "JUMP": # TODO
                     myPrint("label");
+                    checkOperands($lineElements, 2, "Ocekava se 1 operand.");
                     break;
+                # INSTRUKCE S <var>
                 case "DEFVAR":
-                case "POPS":
+                case "POPS": # TODO
                     myPrint("var");
+                    checkOperands($lineElements, 2, "Ocekava se 1 operand.");
                     break;
+                # INSTRUKCE S <label> <symb1> <symb2>
                 case "JUMPIFEQ":
-                case "JUMPIFNEQ":
+                case "JUMPIFNEQ": # TODO
                     myPrint("label symb1 symb2");
+                    checkOperands($lineElements, 4, "Ocekavaji se 3 operandy.");
                     break;
-                case "READ":
+                # INSTRUKCE S <var> <type>
+                case "READ": # TODO
                     myPrint("var type");
+                    checkOperands($lineElements, 3, "Ocekavaji se 2 operandy.");
                     break;
+                # NEEXISTUJICI INSTRUKCE
                 default:
                     errorExit("NEROZPOZNANA INSTRUKCE!\n", UNKNOWN_OPCODE);
                     break;
 
             }
+            $xml->endElement();
         }
     }
 }
