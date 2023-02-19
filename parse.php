@@ -211,7 +211,6 @@ for($i = 0; $i < count($lines); $i++)
                 case "EQ":
                 case "AND":
                 case "OR":
-                case "NOT":
                 case "STR2INT":
                 case "CONCAT":
                 case "GETCHAR":
@@ -234,6 +233,7 @@ for($i = 0; $i < count($lines); $i++)
                     instructionXML($xml, $order, $lineElements);
                     break;
                 # INSTRUKCE S <var> <symb>
+                case "NOT": # ma pouze 2 operandy - do <var> nahraje <symb> jako bool (viz zadani)
                 case "MOVE":
                 case "INT2CHAR":
                 case "STRLEN":
