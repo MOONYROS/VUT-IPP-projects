@@ -1,6 +1,7 @@
 <?php
 
-define("FILENAME", "parse-only/write_test.src", false);
+define("FILENAME", "parse-only/simple_tag.src", false);
+define("OUTPUT", "out.xml", false);
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
 define("PROCESS_OK", 0, false);
@@ -37,6 +38,14 @@ function instructionXML($xml, $order, $lineElements)
     $xml->writeAttribute("opcode", $lineElements[0]);
 }
 
+function operandXML($xml, $arg, $pos, $type)
+{
+    $xml->startElement("arg".$pos);
+    $xml->writeAttribute("type", $type);
+    $xml->text($arg[$pos]);
+    $xml->endElement();
+}
+
 function errorExit($exitText, $errorNumber)
 {
     fprintf(STDERR, "%s", $exitText);
@@ -68,27 +77,17 @@ function checkHeader($lineElements)
         errorExit("Spatna hlavicka programu! Uvodni radek musi obsahovat pouze identifikator jazyka.\n", HEADER_ERROR);
 }
 
-function matchVar($xml, $arg, $pos) # TODO
+function matchVar($xml, $arg, $pos)
 {
     if(preg_match("/^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
-    {
-        $xml->startElement("arg".$pos);
-        $xml->writeAttribute("type", "var");
-        $xml->text($arg[$pos]);
-        $xml->endElement();
-    }
+        operandXML($xml, $arg, $pos, "var");
     else
         errorExit("Spatne zadany operand promenne.", ERROR_LEX_SYNT);
 }
-function matchLabel($xml, $arg, $pos) # TODO
+function matchLabel($xml, $arg, $pos)
 {
     if(preg_match("/^[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
-    {
-        $xml->startElement("arg".$pos);
-        $xml->writeAttribute("type", "var");
-        $xml->text($arg[$pos]);
-        $xml->endElement();
-    }
+        operandXML($xml, $arg, $pos, "label");
     else
         errorExit("Spatne zadany operand navesti.", ERROR_LEX_SYNT);
 }
@@ -96,24 +95,58 @@ function matchLabel($xml, $arg, $pos) # TODO
 function matchType($xml, $arg, $pos)
 {
     if(preg_match("/int|bool|string|nil/", $arg[$pos]))
-    {
-        $xml->startElement("arg".$pos);
-        $xml->writeAttribute("type", "type");
-        $xml->text($arg[$pos]);
-        $xml->endElement();
-    }
+        operandXML($xml, $arg, $pos, "type");
     else
         errorExit("Spatne zadany operand typu.", ERROR_LEX_SYNT);
 }
 
-function matchConst($arg, $pos) # TODO
+function matchConst($xml, $arg, $pos)
 {
+    $tokens = explode("@", $arg[$pos]);
+    if(count($tokens) != 2)
+        errorExit("Spatne zadana konstanta. Neobsahuje oddelovaci @.", ERROR_LEX_SYNT);
 
+    switch($tokens[0])
+    {
+        case "nil":
+            if($arg[$pos] != "nil@nil")
+                errorExit("Spatne zadany typ nil (polozka za @).", ERROR_LEX_SYNT);
+            break;
+        case "int":
+            if(!preg_match("/^int@-?\d+$/", $arg[$pos]))
+                errorExit("Spatne zadany typ int (polozka za @).", ERROR_LEX_SYNT);
+            break;
+        case "bool":
+            if(!preg_match("/^bool@(true|false)$/", $arg[$pos]))
+                errorExit("Spatne zadany typ bool (polozka za @).", ERROR_LEX_SYNT);
+            break;
+        case "string":
+            if(!preg_match("/^string@[^\s]+$/", $arg[$pos])) # TODO upravit nejakym zpusobem escape sekvence
+                errorExit("Spatne zadany typ string (polozka za @).", ERROR_LEX_SYNT);
+            break;
+        default:
+            errorExit("Nerozpoznany typ konstanty. Povolene typy jsou nil, bool, int, string.", ERROR_LEX_SYNT);
+            break;
+    }
+    # operandXML($xml, $tokens[1], $pos, $tokens[0]);
+    $xml->startElement("arg".$pos);
+    $xml->writeAttribute("type", $tokens[0]);
+    $xml->text($tokens[1]);
+    $xml->endElement();
 }
 
-function matchSymb($arg, $pos) # TODO
+function matchSymb($xml, $arg, $pos)
 {
-
+    $tokens = explode("@", $arg[$pos], 2);
+    if(count($tokens) == 2)
+    {
+        if(($tokens[0] == "GF") || ($tokens[0] == "LF") || ($tokens[0] == "TF"))
+            matchVar($xml, $arg, $pos);
+        else
+            matchConst($xml, $arg, $pos);
+    }
+    else
+        errorExit("Symbol neni konstanta ani promenna.", ERROR_LEX_SYNT);
 }
 
 function checkOperands($array, $number, $message)
@@ -184,8 +217,8 @@ for($i = 0; $i < count($lines); $i++)
                     checkOperands($lineElements, 4, "Ocekavaji se 3 operandy za instrukci.");
                     instructionXML($xml, $order, $lineElements);
                     matchVar($xml, $lineElements, 1);
-                    matchSymb($lineElements, 2);
-                    matchSymb($lineElements, 3);
+                    matchSymb($xml, $lineElements, 2);
+                    matchSymb($xml, $lineElements, 3);
                     break;
                 # INSTRUKCE BEZ OPERANDU
                 case "CREATEFRAME":
@@ -216,7 +249,7 @@ for($i = 0; $i < count($lines); $i++)
                     myPrint("symb");
                     checkOperands($lineElements, 2, "Ocekava se 1 operand.");
                     instructionXML($xml, $order, $lineElements);
-                    matchSymb($lineElements, 1);
+                    matchSymb($xml, $lineElements, 1);
                     break;
                 # INSTRUKCE S <label>
                 case "CALL":
@@ -242,11 +275,11 @@ for($i = 0; $i < count($lines); $i++)
                     checkOperands($lineElements, 4, "Ocekavaji se 3 operandy.");
                     instructionXML($xml, $order, $lineElements);
                     matchLabel($xml, $lineElements, 1);
-                    matchSymb($lineElements, 2);
-                    matchSymb($lineElements, 3);
+                    matchSymb($xml, $lineElements, 2);
+                    matchSymb($xml, $lineElements, 3);
                     break;
                 # INSTRUKCE S <var> <type>
-                case "READ": # TODO
+                case "READ":
                     myPrint("var type");
                     checkOperands($lineElements, 3, "Ocekavaji se 2 operandy.");
                     instructionXML($xml, $order, $lineElements);
@@ -255,7 +288,7 @@ for($i = 0; $i < count($lines); $i++)
                     break;
                 # NEEXISTUJICI INSTRUKCE
                 default:
-                    errorExit("NEROZPOZNANA INSTRUKCE!\n", UNKNOWN_OPCODE);
+                    errorExit("NEROZPOZNANA INSTRUKCE: $lineElements[0]\n", UNKNOWN_OPCODE);
                     break;
             }
             $xml->endElement();
@@ -265,6 +298,6 @@ for($i = 0; $i < count($lines); $i++)
 
 $xml->endElement();
 $xml->endDocument();
-if(!file_put_contents("out.xml", trim($xml->outputMemory()))) # php://output
+if(!file_put_contents(OUTPUT, trim($xml->outputMemory()))) # php://output
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
 $xml->flush();
