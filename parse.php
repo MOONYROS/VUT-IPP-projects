@@ -169,6 +169,7 @@ $xml->startElement('program');
 $xml->writeAttribute('language', 'IPPcode23');
 
 $order = 0;
+$headerOK = false;
 $lines = file(FILENAME);
 if(!$lines)
     errorExit("NEPODARILO SE PRECIST DATA\n", INPUT_ERROR);
@@ -187,9 +188,10 @@ for($i = 0; $i < count($lines); $i++)
         $lineElements = preg_split("/\s+/", $lines[$i]); # rozdelim radek na na elementy podle bilych znaku
 
         # kontrola vstupu
-        if($i == 0) # kontrola hlavicky .IPPcode23 a jine varianty
+        if(!$headerOK) # kontrola hlavicky .IPPcode23 a jine varianty
         {
             checkHeader($lineElements);
+            $headerOK = true;
             myPrint("HEADER OK");
         }
         else
