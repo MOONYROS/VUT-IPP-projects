@@ -3,7 +3,7 @@
 define("FILENAME", "parse-only/write_test.src", false);
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
-define("PROCCESS_OK", 0, false);
+define("PROCESS_OK", 0, false);
 define("PARAM_ERROR", 10, false);
 define("INPUT_ERROR", 11, false);
 define("OUTPUT_ERROR", 12, false);
@@ -14,7 +14,7 @@ define("HEADER_ERROR", 21, false);
 define("UNKNOWN_OPCODE", 22, false);
 define("ERROR_LEX_SYNT", 23, false);
 
-define("PRINT_ENABLE", 1, false);
+define("PRINT_ENABLE", 0, false);
 function myPrint($text)
 {
     if(PRINT_ENABLE)
@@ -50,7 +50,7 @@ function checkArguments($argc, $argv)
         if(($argc == 2) && ($argv[1] == "--help"))
         {
             displayHelp();
-            exit(PROCCESS_OK);
+            exit(PROCESS_OK);
         }
         else
             errorExit("SPATNE ZADANY PARAMETR!\n", PARAM_ERROR);
@@ -70,23 +70,48 @@ function checkHeader($lineElements)
 
 function matchVar($xml, $arg, $pos) # TODO
 {
-    /*if(preg_match("^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
+    if(preg_match("/^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
     {
-        $xml->startElement($pos);
+        $xml->startElement("arg".$pos);
         $xml->writeAttribute("type", "var");
         $xml->text($arg[$pos]);
         $xml->endElement();
     }
     else
-        errorExit("Spatne zadana promenna!", ERROR_LEX_SYNT); */
+        errorExit("Spatne zadany operand promenne.", ERROR_LEX_SYNT);
+}
+function matchLabel($xml, $arg, $pos) # TODO
+{
+    if(preg_match("/^[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
+    {
+        $xml->startElement("arg".$pos);
+        $xml->writeAttribute("type", "var");
+        $xml->text($arg[$pos]);
+        $xml->endElement();
+    }
+    else
+        errorExit("Spatne zadany operand navesti.", ERROR_LEX_SYNT);
 }
 
-function matchSymb($arg, $pos) # TODO
+function matchType($xml, $arg, $pos)
+{
+    if(preg_match("/int|bool|string|nil/", $arg[$pos]))
+    {
+        $xml->startElement("arg".$pos);
+        $xml->writeAttribute("type", "type");
+        $xml->text($arg[$pos]);
+        $xml->endElement();
+    }
+    else
+        errorExit("Spatne zadany operand typu.", ERROR_LEX_SYNT);
+}
+
+function matchConst($arg, $pos) # TODO
 {
 
 }
 
-function matchLabel($arg, $pos) # TODO
+function matchSymb($arg, $pos) # TODO
 {
 
 }
@@ -154,7 +179,7 @@ for($i = 0; $i < count($lines); $i++)
                 case "STR2INT":
                 case "CONCAT":
                 case "GETCHAR":
-                case "SETCHAR": # TODO
+                case "SETCHAR":
                     myPrint("var symb1 symb2");
                     checkOperands($lineElements, 4, "Ocekavaji se 3 operandy za instrukci.");
                     instructionXML($xml, $order, $lineElements);
@@ -176,49 +201,70 @@ for($i = 0; $i < count($lines); $i++)
                 case "MOVE":
                 case "INT2CHAR":
                 case "STRLEN":
-                case "TYPE": # TODO
+                case "TYPE":
                     myPrint("var symb");
                     checkOperands($lineElements, 3, "Ocekavaji se 2 operandy.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchVar($xml, $lineElements, 1);
+                    matchSymb($xml, $lineElements, 2);
                     break;
                 # INSTRUKCE S <symb>
                 case "PUSHS":
                 case "WRITE":
                 case "EXIT":
-                case "DPRINT": # TODO
+                case "DPRINT":
                     myPrint("symb");
                     checkOperands($lineElements, 2, "Ocekava se 1 operand.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchSymb($lineElements, 1);
                     break;
                 # INSTRUKCE S <label>
                 case "CALL":
                 case "LABEL":
-                case "JUMP": # TODO
+                case "JUMP":
                     myPrint("label");
                     checkOperands($lineElements, 2, "Ocekava se 1 operand.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchLabel($xml, $lineElements, 1);
                     break;
                 # INSTRUKCE S <var>
                 case "DEFVAR":
-                case "POPS": # TODO
+                case "POPS":
                     myPrint("var");
                     checkOperands($lineElements, 2, "Ocekava se 1 operand.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchVar($xml, $lineElements, 1);
                     break;
                 # INSTRUKCE S <label> <symb1> <symb2>
                 case "JUMPIFEQ":
-                case "JUMPIFNEQ": # TODO
+                case "JUMPIFNEQ":
                     myPrint("label symb1 symb2");
                     checkOperands($lineElements, 4, "Ocekavaji se 3 operandy.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchLabel($xml, $lineElements, 1);
+                    matchSymb($lineElements, 2);
+                    matchSymb($lineElements, 3);
                     break;
                 # INSTRUKCE S <var> <type>
                 case "READ": # TODO
                     myPrint("var type");
                     checkOperands($lineElements, 3, "Ocekavaji se 2 operandy.");
+                    instructionXML($xml, $order, $lineElements);
+                    matchVar($xml, $lineElements, 1);
+                    matchType($xml, $lineElements, 2);
                     break;
                 # NEEXISTUJICI INSTRUKCE
                 default:
                     errorExit("NEROZPOZNANA INSTRUKCE!\n", UNKNOWN_OPCODE);
                     break;
-
             }
             $xml->endElement();
         }
     }
 }
+
+$xml->endElement();
+$xml->endDocument();
+if(!file_put_contents("out.xml", trim($xml->outputMemory()))) # php://output
+    errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
+$xml->flush();
