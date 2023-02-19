@@ -1,4 +1,5 @@
 <?php
+ini_set('display_errors', 'stderr');
 
 define("FILENAME", "parse-only/simple_tag.src", false);
 define("OUTPUT", "out.xml", false);
