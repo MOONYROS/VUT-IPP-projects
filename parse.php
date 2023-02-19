@@ -305,3 +305,8 @@ $xml->endDocument();
 if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
 $xml->flush();
+
+# TODO crash testu:
+# read (simple(245/246/247/248))
+# string (escape1, empty, slash) 23|0, 0|23, 23|0
+# opcode (smallcase, ok, cases)
