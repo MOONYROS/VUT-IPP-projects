@@ -17,6 +17,7 @@ define("UNKNOWN_OPCODE", 22, false);
 define("ERROR_LEX_SYNT", 23, false);
 
 define("PRINT_ENABLE", 0, false);
+
 function myPrint($text)
 {
     if(PRINT_ENABLE)
@@ -171,7 +172,7 @@ $xml->writeAttribute('language', 'IPPcode23');
 
 $order = 0;
 $headerOK = false;
-$lines = file(FILENAME);
+$lines = file("php://stdin"); # FILENAME
 if(!$lines)
     errorExit("NEPODARILO SE PRECIST DATA\n", INPUT_ERROR);
 
@@ -301,6 +302,6 @@ for($i = 0; $i < count($lines); $i++)
 
 $xml->endElement();
 $xml->endDocument();
-if(!file_put_contents(OUTPUT, trim($xml->outputMemory()))) # php://output
+if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
 $xml->flush();
