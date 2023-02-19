@@ -115,7 +115,7 @@ function matchConst($xml, $arg, $pos)
                 errorExit("Spatne zadany typ nil (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "int":
-            if(!preg_match("/^int@-?\d+$/", $arg[$pos]))
+            if(!preg_match("/^int@(-|\+)?\d+$/", $arg[$pos]))
                 errorExit("Spatne zadany typ int (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "bool":
@@ -212,7 +212,7 @@ for($i = 0; $i < count($lines); $i++)
                 case "EQ":
                 case "AND":
                 case "OR":
-                case "STR2INT":
+                case "STRI2INT":
                 case "CONCAT":
                 case "GETCHAR":
                 case "SETCHAR":
