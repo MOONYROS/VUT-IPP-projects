@@ -1,7 +1,7 @@
 <?php
 ini_set('display_errors', 'stderr');
 
-define("FILENAME", "parse-only/simple_tag.src", false);
+define("INPUT", "customTests/custom/slash.src", false);
 define("OUTPUT", "out.xml", false);
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
@@ -37,7 +37,7 @@ function instructionXML($xml, $order, $lineElements)
 {
     $xml->startElement("instruction");
     $xml->writeAttribute("order", $order);
-    $xml->writeAttribute("opcode", $lineElements[0]);
+    $xml->writeAttribute("opcode", strtoupper($lineElements[0]));
 }
 
 function operandXML($xml, $arg, $pos, $type)
@@ -96,7 +96,7 @@ function matchLabel($xml, $arg, $pos)
 
 function matchType($xml, $arg, $pos)
 {
-    if(preg_match("/int|bool|string|nil/", $arg[$pos]))
+    if(preg_match("/^(int|bool|string)$/", $arg[$pos]))
         operandXML($xml, $arg, $pos, "type");
     else
         errorExit("Spatne zadany operand typu.", ERROR_LEX_SYNT);
@@ -123,7 +123,7 @@ function matchConst($xml, $arg, $pos)
                 errorExit("Spatne zadany typ bool (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "string":
-            if(!preg_match("/^string@[^\s]+$/", $arg[$pos])) # TODO upravit nejakym zpusobem escape sekvence
+            if(!preg_match("/^string@([^\s#\\\\]|\\\\\d{3})*$/", $arg[$pos])) # TODO upravit nejakym zpusobem escape sekvence ^string@[^\s]*$
                 errorExit("Spatne zadany typ string (polozka za @).", ERROR_LEX_SYNT);
             break;
         default:
@@ -172,7 +172,7 @@ $xml->writeAttribute('language', 'IPPcode23');
 
 $order = 0;
 $headerOK = false;
-$lines = file("php://stdin"); # FILENAME
+$lines = file("php://stdin"); # INPUT / "php://stdin"
 if(!$lines)
     errorExit("NEPODARILO SE PRECIST DATA\n", INPUT_ERROR);
 
@@ -302,11 +302,6 @@ for($i = 0; $i < count($lines); $i++)
 
 $xml->endElement();
 $xml->endDocument();
-if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT
+if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT / "php://output"
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
 $xml->flush();
-
-# TODO crash testu:
-# read (simple(245/246/247/248))
-# string (escape1, empty, slash) 23|0, 0|23, 23|0
-# opcode (smallcase, ok, cases)
