@@ -131,3 +131,6 @@ dmypy.json
 .idea/
 jexamxml/
 customTests*
+options
+jexamxml.jar
+IPP23_parser*
