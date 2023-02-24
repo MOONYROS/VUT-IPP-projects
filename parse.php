@@ -21,8 +21,8 @@ const PRINT_ENABLE = 0;
 
 /**
  * @brief Pomocna funkce, ktera funguje je jako echo, ale lze ji vypnout prepnutim konstanty PRINT_ENABLE na 0.
- * @param string $text
- * @return void
+ * @param string $text Text, ktery bude vypsan na standardni vystup.
+ * @return void Vypise zpravu na standardni vystup.
  */
 function myPrint(string $text)
 {
@@ -45,10 +45,10 @@ function displayHelp()
 
 /**
  * @brief Funkce zapise instrukci do formatu xml.
- * @param XMLWriter $xml
- * @param int $order
- * @param array $lineElements
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param int $order Poradi instrukce.
+ * @param array $lineElements Pole prvku instrukce.
+ * @return void Zapisuje instrukci do formatu XML.
  */
 function instructionXML(XMLWriter $xml, int $order, array $lineElements)
 {
@@ -59,11 +59,11 @@ function instructionXML(XMLWriter $xml, int $order, array $lineElements)
 
 /**
  * @brief Zapise argument do formatu XML a ocisluje jeho pozici na zaklade $arg.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @param string $type
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice argumentu instrukce v poli $arg.
+ * @param string $type Typ operandu.
+ * @return void Zapise operand do XML formatu.
  */
 function operandXML(XMLWriter $xml, array $arg, int $pos, string $type)
 {
@@ -75,9 +75,9 @@ function operandXML(XMLWriter $xml, array $arg, int $pos, string $type)
 
 /**
  * @brief Vola na chybovy vystup zpravu a vraci chybovy navratovy kod podle specifikace.
- * @param string $exitText
- * @param int $errorNumber
- * @return void
+ * @param string $exitText Text, ktery se navrati s chybou.
+ * @param int $errorNumber Cislo, oznacujici prislusnou chybu.
+ * @return void Navraci chybu zvoleneho cisla se zpravou na STDERR.
  */
 function errorExit(string $exitText, int $errorNumber)
 {
@@ -87,9 +87,9 @@ function errorExit(string $exitText, int $errorNumber)
 
 /**
  * @brief Kontroluje argumenty, jestli je spravne zapsany jejich pocet a format (jediny pripustny je --help).
- * @param int $argc
- * @param array $argv
- * @return void
+ * @param int $argc Pocet argumentu.
+ * @param array $argv Pole s argumenty.
+ * @return void Program pokracuje nebo se zahlasi chyba.
  */
 function checkArguments(int $argc, array $argv)
 {
@@ -107,8 +107,8 @@ function checkArguments(int $argc, array $argv)
 
 /**
  * @brief Kotroluje hlavicku standardniho vstupu, na ktere musi byt napsano .IPPcode23 case insensitive.
- * @param array $lineElements
- * @return void
+ * @param array $lineElements Pole prvku instrukce.
+ * @return void Nevraci nic, pokud je prubeh v poradku, jinak hlasi chybu.
  */
 function checkHeader(array $lineElements)
 {
@@ -123,10 +123,10 @@ function checkHeader(array $lineElements)
 
 /**
  * @brief Kontroluje, zda je ve spravnem formatu zapsana promenna, pokud ano, zapise ji do XML, jinak vraci prislusnou chybu.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice argumentu v poli $arg.
+ * @return void Zapisuje promennou do XML formatu nebo hlasi chybu.
  */
 function matchVar(XMLWriter $xml, array $arg, int $pos)
 {
@@ -138,10 +138,10 @@ function matchVar(XMLWriter $xml, array $arg, int $pos)
 
 /**
  * @brief Kontroluje, zda je spravne zadano navesti, pokud ano, zapise jej do XML formatu, jinak vraci prislusnou chybu.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice argumentu v poli $arg.
+ * @return void Zapisuje navesti do XML formatu nebo hlasi chybu.
  */
 function matchLabel(XMLWriter $xml, array $arg, int $pos)
 {
@@ -153,10 +153,10 @@ function matchLabel(XMLWriter $xml, array $arg, int $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu typu, pokud ano, zapise ji do formatu XML, jinak vraci prislusnou chybu.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice daneho argumentu.
+ * @return void Zapisuje typ do XML formatu nebo zahlasi chybu.
  */
 function matchType(XMLWriter $xml, array $arg, int $pos)
 {
@@ -168,10 +168,10 @@ function matchType(XMLWriter $xml, array $arg, int $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu konstanty. Pokud je zadana spravne, zapise ji do XML, jinak vraci prislusnou chybu.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice argumentu v poli.
+ * @return void Zapise konstantu do XML nebo hlasi chybu.
  */
 function matchConst(XMLWriter $xml, array $arg, int $pos)
 {
@@ -186,7 +186,7 @@ function matchConst(XMLWriter $xml, array $arg, int $pos)
                 errorExit("Spatne zadany typ nil (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "int":
-            if(!preg_match("/^int@(-|\+)?\d+$/", $arg[$pos]))
+            if(!preg_match("/^int@[+-]?\d+$/", $arg[$pos]))
                 errorExit("Spatne zadany typ int (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "bool":
@@ -201,7 +201,6 @@ function matchConst(XMLWriter $xml, array $arg, int $pos)
             errorExit("Nerozpoznany typ konstanty. Povolene typy jsou nil, bool, int, string.", ERROR_LEX_SYNT);
             break;
     }
-    # operandXML($xml, $tokens[1], $pos, $tokens[0]);
     $xml->startElement("arg".$pos);
     $xml->writeAttribute("type", $tokens[0]);
     $xml->text($tokens[1]);
@@ -210,10 +209,10 @@ function matchConst(XMLWriter $xml, array $arg, int $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu symbolu. Pokud je symbol zadan spravne, je zapsan do XML, jinak se vraci prislusna chyba.
- * @param XMLWriter $xml
- * @param array $arg
- * @param int $pos
- * @return void
+ * @param XMLWriter $xml XML soubor.
+ * @param array $arg Pole s argumenty instrukce.
+ * @param int $pos Pozice argumentu.
+ * @return void Vraci chybu nebo zapise symbol do xml formatu.
  */
 function matchSymb(XMLWriter $xml, array $arg, int $pos)
 {
@@ -242,12 +241,14 @@ function checkOperands(array $array, int $number, string $message)
         errorExit("Spatny pocet operandu! $message\n", ERROR_LEX_SYNT);
 }
 
-####################### PSEUDOMAIN #######################
+####################### HLAVNI BEH PROGRAMU #######################
 
 myPrint("START SKRIPTU parse.php");
 
+# Nejdrive se pri startu spusti kontrola argumentu.
 checkArguments($argc, $argv);
 
+# pri startu programu se vytvori XMLWriter promenna.
 $xml = new XMLWriter();
 $xml->openMemory();
 $xml->startDocument('1.0', 'UTF-8');
@@ -263,7 +264,8 @@ if(!$lines)
 
 myPrint("SOUBOR NACTEN");
 
-for($i = 0; $i < count($lines); $i++)
+# ZACATEK HLAVNIHO CYKLU PROGRAMU
+for($i = 0; $i < count($lines); $i++) # kontrola vsech radku vstupniho souboru
 {
     myPrint("RADEK $i: $lines[$i]");
 
@@ -285,7 +287,7 @@ for($i = 0; $i < count($lines); $i++)
         {
             $order++;
 
-            switch(strtoupper($lineElements[0]))
+            switch(strtoupper($lineElements[0])) # switch pro rozpoznavani instrukce
             {
                 # INSTRUKCE S <var> <symb1> <symb2>
                 case "ADD":
@@ -380,13 +382,13 @@ for($i = 0; $i < count($lines); $i++)
                     errorExit("NEROZPOZNANA INSTRUKCE: $lineElements[0]\n", UNKNOWN_OPCODE);
                     break;
             }
-            $xml->endElement();
+            $xml->endElement(); # konec zapisovani jedne instrukce a jejich operandu do XML formatu
         }
     }
 }
 
-$xml->endElement();
-$xml->endDocument();
+$xml->endElement(); # ukonceni elementu <program>
+$xml->endDocument(); # zavreni XML dokumentu
 if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT / "php://output"
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
-$xml->flush();
+$xml->flush(); # vraceni XML bufferu
