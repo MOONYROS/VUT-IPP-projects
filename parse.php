@@ -1,15 +1,14 @@
 <?php
 ini_set('display_errors', 'stderr');
 
-#const INPUT = "customTests/custom/slash.src";
-#const OUTPUT = "out.xml";
+const INPUT = "php://stdin";
+const OUTPUT = "php://output";
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
 const PROCESS_OK = 0;
 const PARAM_ERROR = 10;
 const INPUT_ERROR = 11;
 const OUTPUT_ERROR = 12;
-# const INTERNAL_ERROR = 99;
 
 # NAVRATY DEFINOVANE PRO parse.php
 const HEADER_ERROR = 21;
@@ -89,7 +88,7 @@ function errorExit(string $exitText, int $errorNumber)
  * @brief Kontroluje argumenty, jestli je spravne zapsany jejich pocet a format (jediny pripustny je --help).
  * @param int $argc Pocet argumentu.
  * @param array $argv Pole s argumenty.
- * @return void Program pokracuje nebo se zahlasi chyba.
+ * @return void Program pokracuje (vraci 0) nebo se zahlasi chyba.
  */
 function checkArguments(int $argc, array $argv)
 {
@@ -258,7 +257,7 @@ $xml->writeAttribute('language', 'IPPcode23');
 
 $order = 0;
 $headerOK = false;
-$lines = file("php://stdin"); # INPUT / "php://stdin"
+$lines = file(INPUT);
 if(!$lines)
     errorExit("NEPODARILO SE PRECIST DATA\n", INPUT_ERROR);
 
@@ -286,7 +285,6 @@ for($i = 0; $i < count($lines); $i++) # kontrola vsech radku vstupniho souboru
         else
         {
             $order++;
-
             switch(strtoupper($lineElements[0])) # switch pro rozpoznavani instrukce
             {
                 # INSTRUKCE S <var> <symb1> <symb2>
@@ -389,6 +387,6 @@ for($i = 0; $i < count($lines); $i++) # kontrola vsech radku vstupniho souboru
 
 $xml->endElement(); # ukonceni elementu <program>
 $xml->endDocument(); # zavreni XML dokumentu
-if(!file_put_contents("php://output", trim($xml->outputMemory()))) # OUTPUT / "php://output"
+if(!file_put_contents(OUTPUT, trim($xml->outputMemory())))
     errorExit("Nepodarilo se vypsat data.", OUTPUT_ERROR);
 $xml->flush(); # vraceni XML bufferu
