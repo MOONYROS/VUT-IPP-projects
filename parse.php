@@ -1,29 +1,30 @@
 <?php
 ini_set('display_errors', 'stderr');
 
-define("INPUT", "customTests/custom/slash.src", false);
-define("OUTPUT", "out.xml", false);
+#const INPUT = "customTests/custom/slash.src";
+#const OUTPUT = "out.xml";
 
 # NAVRATY STEJNE PRO OBA SKRIPTY
-define("PROCESS_OK", 0, false);
-define("PARAM_ERROR", 10, false);
-define("INPUT_ERROR", 11, false);
-define("OUTPUT_ERROR", 12, false);
-define("INTERNAL_ERROR", 99, false);
+const PROCESS_OK = 0;
+const PARAM_ERROR = 10;
+const INPUT_ERROR = 11;
+const OUTPUT_ERROR = 12;
+# const INTERNAL_ERROR = 99;
 
 # NAVRATY DEFINOVANE PRO parse.php
-define("HEADER_ERROR", 21, false);
-define("UNKNOWN_OPCODE", 22, false);
-define("ERROR_LEX_SYNT", 23, false);
+const HEADER_ERROR = 21;
+const UNKNOWN_OPCODE = 22;
+const ERROR_LEX_SYNT = 23;
 
-define("PRINT_ENABLE", 0, false);
+# POMOCNA KONSTANTA
+const PRINT_ENABLE = 0;
 
 /**
  * @brief Pomocna funkce, ktera funguje je jako echo, ale lze ji vypnout prepnutim konstanty PRINT_ENABLE na 0.
- * @param $text
+ * @param string $text
  * @return void
  */
-function myPrint($text)
+function myPrint(string $text)
 {
     if(PRINT_ENABLE)
         echo "LOG: $text\n";
@@ -44,12 +45,12 @@ function displayHelp()
 
 /**
  * @brief Funkce zapise instrukci do formatu xml.
- * @param $xml
- * @param $order
- * @param $lineElements
+ * @param XMLWriter $xml
+ * @param int $order
+ * @param array $lineElements
  * @return void
  */
-function instructionXML($xml, $order, $lineElements)
+function instructionXML(XMLWriter $xml, int $order, array $lineElements)
 {
     $xml->startElement("instruction");
     $xml->writeAttribute("order", $order);
@@ -58,13 +59,13 @@ function instructionXML($xml, $order, $lineElements)
 
 /**
  * @brief Zapise argument do formatu XML a ocisluje jeho pozici na zaklade $arg.
- * @param $xml
- * @param $arg
- * @param $pos
- * @param $type
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
+ * @param string $type
  * @return void
  */
-function operandXML($xml, $arg, $pos, $type)
+function operandXML(XMLWriter $xml, array $arg, int $pos, string $type)
 {
     $xml->startElement("arg".$pos);
     $xml->writeAttribute("type", $type);
@@ -74,11 +75,11 @@ function operandXML($xml, $arg, $pos, $type)
 
 /**
  * @brief Vola na chybovy vystup zpravu a vraci chybovy navratovy kod podle specifikace.
- * @param $exitText
- * @param $errorNumber
+ * @param string $exitText
+ * @param int $errorNumber
  * @return void
  */
-function errorExit($exitText, $errorNumber)
+function errorExit(string $exitText, int $errorNumber)
 {
     fprintf(STDERR, "%s", $exitText);
     exit($errorNumber);
@@ -86,11 +87,11 @@ function errorExit($exitText, $errorNumber)
 
 /**
  * @brief Kontroluje argumenty, jestli je spravne zapsany jejich pocet a format (jediny pripustny je --help).
- * @param $argc
- * @param $argv
+ * @param int $argc
+ * @param array $argv
  * @return void
  */
-function checkArguments($argc, $argv)
+function checkArguments(int $argc, array $argv)
 {
     if($argc > 1)
     {
@@ -106,10 +107,10 @@ function checkArguments($argc, $argv)
 
 /**
  * @brief Kotroluje hlavicku standardniho vstupu, na ktere musi byt napsano .IPPcode23 case insensitive.
- * @param $lineElements
+ * @param array $lineElements
  * @return void
  */
-function checkHeader($lineElements)
+function checkHeader(array $lineElements)
 {
     if(count($lineElements) == 1) # v hlavicce ocekavame pouze jeden prvek
     {
@@ -122,12 +123,12 @@ function checkHeader($lineElements)
 
 /**
  * @brief Kontroluje, zda je ve spravnem formatu zapsana promenna, pokud ano, zapise ji do XML, jinak vraci prislusnou chybu.
- * @param $xml
- * @param $arg
- * @param $pos
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
  * @return void
  */
-function matchVar($xml, $arg, $pos)
+function matchVar(XMLWriter $xml, array $arg, int $pos)
 {
     if(preg_match("/^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
         operandXML($xml, $arg, $pos, "var");
@@ -137,12 +138,12 @@ function matchVar($xml, $arg, $pos)
 
 /**
  * @brief Kontroluje, zda je spravne zadano navesti, pokud ano, zapise jej do XML formatu, jinak vraci prislusnou chybu.
- * @param $xml
- * @param $arg
- * @param $pos
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
  * @return void
  */
-function matchLabel($xml, $arg, $pos)
+function matchLabel(XMLWriter $xml, array $arg, int $pos)
 {
     if(preg_match("/^[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
         operandXML($xml, $arg, $pos, "label");
@@ -152,12 +153,12 @@ function matchLabel($xml, $arg, $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu typu, pokud ano, zapise ji do formatu XML, jinak vraci prislusnou chybu.
- * @param $xml
- * @param $arg
- * @param $pos
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
  * @return void
  */
-function matchType($xml, $arg, $pos)
+function matchType(XMLWriter $xml, array $arg, int $pos)
 {
     if(preg_match("/^(int|bool|string)$/", $arg[$pos]))
         operandXML($xml, $arg, $pos, "type");
@@ -167,12 +168,12 @@ function matchType($xml, $arg, $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu konstanty. Pokud je zadana spravne, zapise ji do XML, jinak vraci prislusnou chybu.
- * @param $xml
- * @param $arg
- * @param $pos
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
  * @return void
  */
-function matchConst($xml, $arg, $pos)
+function matchConst(XMLWriter $xml, array $arg, int $pos)
 {
     $tokens = explode("@", $arg[$pos]);
     if(count($tokens) != 2)
@@ -209,12 +210,12 @@ function matchConst($xml, $arg, $pos)
 
 /**
  * @brief Kontroluje spravnost zapisu symbolu. Pokud je symbol zadan spravne, je zapsan do XML, jinak se vraci prislusna chyba.
- * @param $xml
- * @param $arg
- * @param $pos
+ * @param XMLWriter $xml
+ * @param array $arg
+ * @param int $pos
  * @return void
  */
-function matchSymb($xml, $arg, $pos)
+function matchSymb(XMLWriter $xml, array $arg, int $pos)
 {
     $tokens = explode("@", $arg[$pos], 2);
     if(count($tokens) == 2)
@@ -230,12 +231,12 @@ function matchSymb($xml, $arg, $pos)
 
 /**
  * @brief Funkce kontroluje pocet operandu u instrukci. Pokud neni pocet operandu spravny, vypisuje chybu.
- * @param $array
- * @param $number
- * @param $message
+ * @param array $array
+ * @param int $number
+ * @param string $message
  * @return void
  */
-function checkOperands($array, $number, $message)
+function checkOperands(array $array, int $number, string $message)
 {
     if(count($array) != $number)
         errorExit("Spatny pocet operandu! $message\n", ERROR_LEX_SYNT);
