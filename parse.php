@@ -18,12 +18,21 @@ define("ERROR_LEX_SYNT", 23, false);
 
 define("PRINT_ENABLE", 0, false);
 
+/**
+ * @brief Pomocna funkce, ktera funguje je jako echo, ale lze ji vypnout prepnutim konstanty PRINT_ENABLE na 0.
+ * @param $text
+ * @return void
+ */
 function myPrint($text)
 {
     if(PRINT_ENABLE)
         echo "LOG: $text\n";
 }
 
+/**
+ * @brief Funkce pro vypis napovedy pro pouziti skriptu na standardni vystup.
+ * @return void vypise napovedu ke skriptu na standartni vystup pri zadani prepinace --help
+ */
 function displayHelp()
 {
     echo "=== NAPOVEDA KE SKRIPTU parse.php ===\n";
@@ -33,6 +42,13 @@ function displayHelp()
     echo "php8.1 parse.php [volitelny parametr] <[vstupni soubor] >[vystupni soubor]\n";
 }
 
+/**
+ * @brief Funkce zapise instrukci do formatu xml.
+ * @param $xml
+ * @param $order
+ * @param $lineElements
+ * @return void
+ */
 function instructionXML($xml, $order, $lineElements)
 {
     $xml->startElement("instruction");
@@ -40,6 +56,14 @@ function instructionXML($xml, $order, $lineElements)
     $xml->writeAttribute("opcode", strtoupper($lineElements[0]));
 }
 
+/**
+ * @brief Zapise argument do formatu XML a ocisluje jeho pozici na zaklade $arg.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @param $type
+ * @return void
+ */
 function operandXML($xml, $arg, $pos, $type)
 {
     $xml->startElement("arg".$pos);
@@ -48,12 +72,24 @@ function operandXML($xml, $arg, $pos, $type)
     $xml->endElement();
 }
 
+/**
+ * @brief Vola na chybovy vystup zpravu a vraci chybovy navratovy kod podle specifikace.
+ * @param $exitText
+ * @param $errorNumber
+ * @return void
+ */
 function errorExit($exitText, $errorNumber)
 {
     fprintf(STDERR, "%s", $exitText);
     exit($errorNumber);
 }
 
+/**
+ * @brief Kontroluje argumenty, jestli je spravne zapsany jejich pocet a format (jediny pripustny je --help).
+ * @param $argc
+ * @param $argv
+ * @return void
+ */
 function checkArguments($argc, $argv)
 {
     if($argc > 1)
@@ -68,6 +104,11 @@ function checkArguments($argc, $argv)
     }
 }
 
+/**
+ * @brief Kotroluje hlavicku standardniho vstupu, na ktere musi byt napsano .IPPcode23 case insensitive.
+ * @param $lineElements
+ * @return void
+ */
 function checkHeader($lineElements)
 {
     if(count($lineElements) == 1) # v hlavicce ocekavame pouze jeden prvek
@@ -79,6 +120,13 @@ function checkHeader($lineElements)
         errorExit("Spatna hlavicka programu! Uvodni radek musi obsahovat pouze identifikator jazyka.\n", HEADER_ERROR);
 }
 
+/**
+ * @brief Kontroluje, zda je ve spravnem formatu zapsana promenna, pokud ano, zapise ji do XML, jinak vraci prislusnou chybu.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @return void
+ */
 function matchVar($xml, $arg, $pos)
 {
     if(preg_match("/^(GF|LF|TF)@[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
@@ -86,6 +134,14 @@ function matchVar($xml, $arg, $pos)
     else
         errorExit("Spatne zadany operand promenne.", ERROR_LEX_SYNT);
 }
+
+/**
+ * @brief Kontroluje, zda je spravne zadano navesti, pokud ano, zapise jej do XML formatu, jinak vraci prislusnou chybu.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @return void
+ */
 function matchLabel($xml, $arg, $pos)
 {
     if(preg_match("/^[a-zA-Z_\-$&%*!?][\w\-$&%*!?]*$/", $arg[$pos]))
@@ -94,6 +150,13 @@ function matchLabel($xml, $arg, $pos)
         errorExit("Spatne zadany operand navesti.", ERROR_LEX_SYNT);
 }
 
+/**
+ * @brief Kontroluje spravnost zapisu typu, pokud ano, zapise ji do formatu XML, jinak vraci prislusnou chybu.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @return void
+ */
 function matchType($xml, $arg, $pos)
 {
     if(preg_match("/^(int|bool|string)$/", $arg[$pos]))
@@ -102,6 +165,13 @@ function matchType($xml, $arg, $pos)
         errorExit("Spatne zadany operand typu.", ERROR_LEX_SYNT);
 }
 
+/**
+ * @brief Kontroluje spravnost zapisu konstanty. Pokud je zadana spravne, zapise ji do XML, jinak vraci prislusnou chybu.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @return void
+ */
 function matchConst($xml, $arg, $pos)
 {
     $tokens = explode("@", $arg[$pos]);
@@ -123,7 +193,7 @@ function matchConst($xml, $arg, $pos)
                 errorExit("Spatne zadany typ bool (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "string":
-            if(!preg_match("/^string@([^\s#\\\\]|\\\\\d{3})*$/", $arg[$pos])) # TODO upravit nejakym zpusobem escape sekvence ^string@[^\s]*$
+            if(!preg_match("/^string@([^\s#\\\\]|\\\\\d{3})*$/", $arg[$pos]))
                 errorExit("Spatne zadany typ string (polozka za @).", ERROR_LEX_SYNT);
             break;
         default:
@@ -137,6 +207,13 @@ function matchConst($xml, $arg, $pos)
     $xml->endElement();
 }
 
+/**
+ * @brief Kontroluje spravnost zapisu symbolu. Pokud je symbol zadan spravne, je zapsan do XML, jinak se vraci prislusna chyba.
+ * @param $xml
+ * @param $arg
+ * @param $pos
+ * @return void
+ */
 function matchSymb($xml, $arg, $pos)
 {
     $tokens = explode("@", $arg[$pos], 2);
@@ -151,6 +228,13 @@ function matchSymb($xml, $arg, $pos)
         errorExit("Symbol neni konstanta ani promenna.", ERROR_LEX_SYNT);
 }
 
+/**
+ * @brief Funkce kontroluje pocet operandu u instrukci. Pokud neni pocet operandu spravny, vypisuje chybu.
+ * @param $array
+ * @param $number
+ * @param $message
+ * @return void
+ */
 function checkOperands($array, $number, $message)
 {
     if(count($array) != $number)
