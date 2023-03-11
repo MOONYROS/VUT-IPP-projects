@@ -185,7 +185,7 @@ function matchConst(XMLWriter $xml, array $arg, int $pos)
                 errorExit("Spatne zadany typ nil (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "int":
-            if(!preg_match("/^int@[+-]?\d+$/", $arg[$pos]))
+            if(!preg_match("/^[+-]?(([1-9][0-9]*(_[0-9]+)*|0)|(0[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*)|(0[oO]?[0-7]+(_[0-7]+)*))$/", $tokens[1]))
                 errorExit("Spatne zadany typ int (polozka za @).", ERROR_LEX_SYNT);
             break;
         case "bool":
