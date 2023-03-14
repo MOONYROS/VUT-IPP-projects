@@ -129,10 +129,10 @@ dmypy.json
 .pyre/
 
 .idea/
-jexamxml/
-customTests*
-options
-jexamxml.jar
-tests/
-IPP23_parser*
 .DS*
+proj1/jexamxml/
+proj1/customTests*
+proj1/options
+proj1/jexamxml.jar
+proj1/tests/
+proj1/IPP23_parser*
