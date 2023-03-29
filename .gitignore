@@ -130,6 +130,7 @@ dmypy.json
 
 .idea/
 .DS*
+testing/
 proj1/jexamxml/
 proj1/customTests*
 proj1/options
