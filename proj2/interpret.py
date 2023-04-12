@@ -1,3 +1,8 @@
+"""
+Jmeno: Ondrej Lukasek
+Login: xlukas15
+"""
+
 import argparse
 import os
 import sys
@@ -5,10 +10,10 @@ import xml.etree.ElementTree as ET
 import re
 from collections import deque
 
-# sys.stdout.reconfigure(encoding='utf-8')  # tohle spravi chybu v testech pri spatne definvoenem environmentu,
-# sys.stdin.reconfigure(encoding='utf-8')   # ale zase haze warning v PyCharm
+# sys.stdout.reconfigure(encoding='utf-8')  # tohle spravi chybu v testech pri spatne definovanem prostredi,
+# sys.stdin.reconfigure(encoding='utf-8')   # nicmene vyvolava mild errory v IDE PyCharm
 
-# pomuze nastavit nasledujicich evnironment variables pred pustenim testu:
+# pomuze nastavit nasledujicich evnironment variables pred spustenim testu:
 # set PYTHONIOENCODING=utf-8
 # set PYTHONLEGACYWINDOWSSTDIO=utf-8
 
@@ -60,13 +65,9 @@ act_order = 0
 def error_exit(message, error_code):
     """
     Ukonci program s chybou error_code, vypise message na stderr.
-
-    Argumenty:
-        message (str): Chybove hlaseni, ktere se vypise na stderr.
-        error_code (int): Cislo chyby, se kterou se ukonci provadeni programu.
-
-    Navratova hodnota:
-        Zadna
+    :param message: chybove hlaseni, ktere se vypise na standardni chybovy vystup
+    :param error_code: cislo chyby, se kterou se ukonci provadeni programu
+    :return: Zadna
     """
     global act_order  # Cislo order na kterem doslo chybe je v globalni promenne act_order
     if act_order != 0:
@@ -84,6 +85,10 @@ class XMLReader:
     # vrati serazeny seznam radku programu, vcetne operandu
     # kontroluje strukturu zdrojoveho XML "rucne", protoze zvolena knihovna nepodporuje XSD nebo DTD
     def read(self):
+        """
+        Kontroluje kontrolu vstupniho XML a nasledne seradi instrukce.
+        :return: serazeny seznam radku programu
+        """
         instructions = []
 
         try:
@@ -130,6 +135,7 @@ class XMLReader:
                     'arguments': []
                 }
 
+                # kontrola jednotlivych argumentu instrukci
                 for child in xml_instruction:
                     if child.tag not in {'arg1', 'arg2', 'arg3'}:
                         error_exit("Instrukce obsahuje i jiny subelement nez jen 'arg1', 'arg2' nebo 'arg3'", err_unexpected_struct)
@@ -173,6 +179,7 @@ class XMLReader:
         return sorted_instructions
 
 
+# trida pro zasobnik
 class Stack:
     def __init__(self):
         self.stack = deque()
@@ -192,6 +199,7 @@ class Stack:
         return f"FrameStack(frames={self.stack})"
 
 
+# trida pro jednotlive ramce
 class Frame:
     def __init__(self, is_init=False):
         self.variables = {}
@@ -205,6 +213,7 @@ class Frame:
         return f"Frame(variables={self.variables})"
 
 
+# trida pro zasobnik s ramci
 class FrameStack:
     def __init__(self):
         self.frames = deque()
@@ -263,6 +272,10 @@ class Runtime:
                 error_exit(f"Problem closing input data file", err_prog_cannot_open_input_file)
 
     def check_program_and_fill_labels(self):
+        """
+        Kontroluje vstup programu a uklada si postupne vsechna navesti.
+        :return: slovnik se vsemi ulozenymi navestimi v programu
+        """
         for inst_nr in range(len(self.program)):
             instruction = self.program[inst_nr]
 
@@ -285,6 +298,11 @@ class Runtime:
                     error_exit("Instrukce 'LABEL' musi mit operand s navestim.", err_unexpected_struct)
 
     def get_frame_var(self, var_name):
+        """
+        Zjisti, do jakeho ramce patri promenna.
+        :param var_name: jmeno promenne
+        :return: ramec, do ktereho promenna patri
+        """
         if var_name[:3] == "GF@":
             frame = self.GF
         elif var_name[:3] == "LF@":
@@ -301,6 +319,11 @@ class Runtime:
         return tuple([frame, var_name[3:]])
 
     def define_var(self, var_name: str):
+        """
+        Definuje promennou v prislusnem ramci podle jejiho jmena.
+        :param var_name: jemno promenne
+        :return: vlozi promennou do prislusneho ramce
+        """
         frame, var = self.get_frame_var(var_name)
         if var in frame.variables:
             error_exit("Promenna " + var_name + " je jiz definovana!", err_semantic)
@@ -308,13 +331,24 @@ class Runtime:
             frame.variables[var] = [None, None]
 
     def get_var(self, var_name):
+        """
+        Ziska promennou z jejiho ramce.
+        :param var_name: jmenno promenne
+        :return: promenna z prislusneho ramce
+        """
         frame, var = self.get_frame_var(var_name)
         if var not in frame.variables:
             error_exit("Promenna " + var_name + " neni definovana!", err_getting_not_exist_var)
         else:
             return frame.variables[var]
 
-    def check_value(self, type, value):
+    def check_value(self, type, value): # TODO neni ten type zbytecny???
+        """
+        Kontroluje hodnotu promenne podle jejiho typu.
+        :param type: typ promenne
+        :param value:
+        :return: hodnota promenne
+        """
         try:
             if type == "int":
                 value = int(value)
