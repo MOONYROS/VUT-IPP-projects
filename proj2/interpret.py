@@ -321,7 +321,7 @@ class Runtime:
     def define_var(self, var_name: str):
         """
         Definuje promennou v prislusnem ramci podle jejiho jmena.
-        :param var_name: jemno promenne
+        :param var_name: jmeno promenne
         :return: vlozi promennou do prislusneho ramce
         """
         frame, var = self.get_frame_var(var_name)
@@ -385,6 +385,12 @@ class Runtime:
         return value
 
     def set_var(self, var_name, var_type, value):
+        """
+        Nastavi hodnotu promenne.
+        :param var_name: jmeno promenne
+        :param var_type: typ promenne
+        :param value: pozadovana hodnota promenne
+        """
         frame, var = self.get_frame_var(var_name)
         if var not in frame.variables:
             error_exit("Promenna " + var_name + " neni definovana!", err_getting_not_exist_var)
@@ -394,6 +400,11 @@ class Runtime:
 
     @staticmethod
     def str_esc_dec_to_char(input_string):
+        """
+        Prepise decimalni escape sekvenci na znak.
+        :param input_string: stupni retezec
+        :return: retezec s prevedenou escape sekvenci
+        """
         if input_string is None:
             return ""
         else:
@@ -401,6 +412,12 @@ class Runtime:
 
     @staticmethod
     def extract_args(arguments, count):
+        """
+        Vybere argumenty z instrukce.
+        :param arguments: argumenty
+        :param count: pocet argumentu
+        :return: tuple s extrahovanymi argumenty # TODO zmenit slovo extrahovany (zni to podivne)
+        """
         extracted = []
         try:
             for index in range(0, count):
@@ -412,6 +429,12 @@ class Runtime:
         return tuple(extracted)
 
     def symbol_value(self, arg_type, arg):
+        """
+        Zjisti a vrati hodnotu argumentu <symb>.
+        :param arg_type: typ argumentu
+        :param arg: argument
+        :return: hodnota argumentu
+        """
         type = None
         value = None
         if arg_type == "var":
@@ -425,6 +448,12 @@ class Runtime:
         return [type, value]
 
     def symbol_to_str(self, arg_type, arg):
+        """
+        Prevede hodnotu argumentu <symb> na retezec.
+        :param arg_type: typ argumentu
+        :param arg: argument
+        :return: hodnota argumentu prevedena na retezec
+        """
         value_type, value = self.symbol_value(arg_type, arg)
         if value_type == "int":
             return str(value)
@@ -445,6 +474,14 @@ class Runtime:
             error_exit(f"Error converting argument '{arg}' with type '{arg_type}' to string", err_wrong_operand_type)
 
     def symbol_eq(self, arg1type, arg1value, arg2type, arg2value):
+        """
+        Kontroluje, jestli jsou dva argumenty <symb> ekvivalentni.
+        :param arg1type: Typ prvniho argumenru.
+        :param arg1value: Hodnota prvniho argumentu.
+        :param arg2type: Typ druheho argumentu.
+        :param arg2value: Hodnota druheho argumentu.
+        :return: true pokud jsou ekvivalentni, jinak vraci false
+        """
         value1_type, value1 = self.symbol_value(arg1type, arg1value)
         value2_type, value2 = self.symbol_value(arg2type, arg2value)
         if value1_type != value2_type and value1_type != "nil" and value2_type != "nil":
@@ -455,12 +492,22 @@ class Runtime:
             return value1 == value2
 
     def check_label(self, arg_type, label):
+        """
+        Kontroluje spravnost instrukce LABEL.
+        :param arg_type: typ argumentu
+        :param label: navesti
+        :return: zadny, pripadne vyvola chybu
+        """
         if arg_type != "label":
             error_exit("Prvni argument instrukce skoku musi byt label", err_wrong_operand_type)
         if label not in self.labels:
             error_exit("Neexistujici navesti pro skok", err_semantic)
 
     def count_initialized_variables(self):
+        """
+        Spocita celkovy pocet incializovanych promennych v programu.
+        :return: pocet incializovanych promennych
+        """
         count = 0
         for frame in [self.GF, self.LF, self.TF]:
             if frame.is_initialized:
@@ -471,7 +518,13 @@ class Runtime:
             self.max_initialized_variables = count
         return count
 
-    def get_operands(self, arguments, required_operands):
+    def get_operands(self, arguments, required_operands):  # TODO zjistit co tahle funkce poradne dela
+        """
+        
+        :param arguments:
+        :param required_operands:
+        :return:
+        """
         arg_list = self.extract_args(arguments, len(required_operands))
         if len(arg_list) != len(required_operands) * 2:
             error_exit("Chyba pri nacitani argumentu instrukce", err_unexpected_struct)  # err_internal_error ???
@@ -1058,6 +1111,9 @@ def write_stats_file(stats_file, runtime):
 
 
 def show_help():
+    """
+    Zobrazi pomocne informace k pouziti skriptu.
+    """
     print("Pouziti: python interpret.py [VOLBY]")
     print("Volby:")
     print("  --help         Ukaze tuto napovedu a skonci")
