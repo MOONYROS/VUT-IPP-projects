@@ -1246,7 +1246,8 @@ class Runtime:
     def run(self):
         """
         Hlavni vykonna smycka programu.
-        :return:
+        Pocita instrukce v programu, vykonane instrukce a vykonane radky.
+        Pro spousteni metod jednotlivych instrukci se pouziva 'function_map'.
         """
         global act_order  # Cislo order ktery se zpracovava je v globalni promenne act_order, tam ho budeme menit
 
@@ -1278,38 +1279,46 @@ class Runtime:
             self.count_initialized_variables()
 
 
-def write_stats_file(stats_file, runtime):  # TODO
+def write_stats_file(stats_file, runtime):
+    """
+    Zapise statistiky do souboru statistik.
+    :param stats_file: otevreny soubor pro statistiky
+    :param runtime: objekt se stavovymi informacemi o programu (po ukonceni 'Runtime.run()')
+    """
     for arg in sys.argv:
-        # print( arg[:5] )
+        # postupne projde vsechny parametry prikazove radky a pokud najde nejaky pro statistiky, tak jej provede
         if arg[:7] == '--insts':
             instructions = sum(runtime.instruction_exec.values())
-            # stats_file.write(f"{instructions}\n")
             instructions -= runtime.instruction_exec['LABEL']
             instructions -= runtime.instruction_exec['DPRINT']
             instructions -= runtime.instruction_exec['BREAK']
             stats_file.write(f"{instructions}\n")
         elif arg[:5] == '--hot':
+            # maximalni pocet spusteni nejake instrukce
             max_exec = max(runtime.instruction_exec.values())
+            # vytvoreni seznamu nejcasteji spoustenych instrukci (pokud je vic nejcastejsich)
             max_exec_instructions = [(instruction, count) for instruction, count in runtime.instruction_exec.items() if count == max_exec]
-            # print("Instructions with the highest count:", max_exec_instructions)
             max_count_opcodes = {instruction for instruction, _ in max_exec_instructions}
-            max_count_opcodes.discard('LABEL')  # otazka je, jestli tyto take oddelavat?
+            # oddelame instrukce, ktere se nemaji pocitat
+            max_count_opcodes.discard('LABEL')
             max_count_opcodes.discard('DPRINT')
             max_count_opcodes.discard('BREAK')
-            # print(max_count_opcodes)
+            # vytvorime seznam s 'order' techto instrukci
             max_exec_opcode_orders = []
             for instr in runtime.program:
                 if instr['opcode'] in max_count_opcodes:
                     max_exec_opcode_orders.append(instr['order'])
-                    # print(f"Order of {instr['opcode']}: {instr['order']}")
-            # print("minumum:", min(max_exec_opcode_orders))
+                    print(f"Order of {instr['opcode']}: {instr['order']}")
+            # a vytiskneme z nich tu nejnizsi
             stats_file.write(f"{min(max_exec_opcode_orders)}\n")
         elif arg[:6] == '--vars':
             stats_file.write(f"{runtime.max_initialized_variables}\n")
         elif arg[:10] == '--frequent':
+            # setridime od nejvyssiho instrukce a jejich pocty
             sorted_opcodes = sorted(runtime.instruction_count.items(), key=lambda item: item[1], reverse=True)
-            # print(sorted_opcodes[:3])
+            # vybereme z nich 3 s nejvyssim poctem
             opcode_names = [opcode for opcode, _ in sorted_opcodes[:3]]
+            # a dame je do jednoho retezce oddeleneho carkami a vytiskneme
             output = ','.join(opcode_names)
             stats_file.write(f"{output}\n")
         elif arg[:7] == '--print':
@@ -1336,7 +1345,14 @@ def show_help():
     print("    --eol        (Volitelne) Vypise odradkovani")
 
 
-def main(args):  # TODO
+def main(args):
+    """
+    Vykona parametry prikazove radky, zalozi instanci objektu 'Runtime', do ktereho preda vstupni soubor,
+    nasledne zavola jeho metodu 'run()', ktera vykona vlastni program a vrati jeho navratovou hodnotu.
+    Pred ukoncenim pripadne vytvori soubor se statistikami, pokud byly pozadovany.
+    :param args: parametry prikazove radky
+    :return: navratova hodnota programu
+    """
     if args.help:
         show_help()
         return
@@ -1351,15 +1367,16 @@ def main(args):  # TODO
         if not os.path.exists(source_file):
             error_exit(f"Zdrojovy XML soubor '{source_file}' nebyl nalezen.", err_prog_cannot_open_input_file)
     else:
-        source_file = None
+        source_file = None  # budeme brat program ze stdin
 
     if args.input:
         input_file = args.input
         if not os.path.exists(input_file):
             error_exit(f"Vstupni soubor '{input_file}' nebyl nalezen.", err_prog_cannot_open_input_file)
     else:
-        input_file = None
+        input_file = None  # budeme brat data ze stdin
 
+    # pokud byly pozadovany statistiky, zalozi a otevre pro ne soubor
     stats_file = None
     if args.stats:
         stats_file_name = args.stats
@@ -1368,12 +1385,16 @@ def main(args):  # TODO
         except OSError as e:
             error_exit(f"Chyba {e} pri vytvareni souboru pro ulozeni statistik '{stats_file_name}'.", err_prog_cannot_open_output_file)
     else:
+        # pokud uzivatel pozaduje nektere ze statistik, ale nezadal soubor, pak je vyvolana chyba
         if args.insts or args.hot or args.vars or args.frequent or args.print or args.eol:
             error_exit("Byl zadan nektery z parametru volitelnych statistik, ale bez uvodniho parametru --stats.", err_prog_missing_parameter)
 
+    # zalozeni instance Runtime a nacteni vstupniho souboru do programu
     runtime = Runtime(source_file, input_file)
+    # spusteni programu
     runtime.run()
 
+    # po ukonceni programu zapiseme statistiky, pokud byly pozadovany
     if args.stats:
         write_stats_file(stats_file, runtime)
         try:
@@ -1381,10 +1402,12 @@ def main(args):  # TODO
         except OSError as e:
             error_exit(f"Chyba {e} pri uzavirani souboru se statistikami '{stats_file}'.", err_prog_cannot_open_output_file)
 
+    # vracime navratovou hodnotu z behu programu (meni jenom instrukce 'EXIT')
     return runtime.return_value
 
 
 if __name__ == "__main__":
+    # v hlavnim modulu pouzijeme argparse na zpracovani prikazove radky
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--help', action='store_true', help='Vypise tuto napovedu a skonci')
     parser.add_argument('--source', type=str, help='Ucruje zdrojovy XML soubor')
@@ -1397,5 +1420,6 @@ if __name__ == "__main__":
     parser.add_argument('--print', type=str, help='(Volitelne) Vypise zadany retezec')
     parser.add_argument('--eol', action='store_true', help='(Volitelne) Vypise odradkovani')
     prg_args = parser.parse_args()
+    # a spustime funkci main
     return_value = main(prg_args)
     sys.exit(return_value)
