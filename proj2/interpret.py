@@ -586,6 +586,9 @@ class Runtime:
         return tuple(operands)
 
     def do_MOVE(self):
+        """
+        Vykona instrukci MOVE <var> <symb>.
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'symb'))
         self.set_var(arg1, value_type, value)
         self.inst_nr += 1
