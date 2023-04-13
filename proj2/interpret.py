@@ -301,7 +301,7 @@ class Runtime:
         """
         Zjisti, do jakeho ramce patri promenna.
         :param var_name: jmeno promenne
-        :return: ramec, do ktereho promenna patri
+        :return: vrati tuple - ramec promenne a jmeno promenne (za znakem '@')
         """
         if var_name[:3] == "GF@":
             frame = self.GF
@@ -334,7 +334,7 @@ class Runtime:
         """
         Ziska promennou z jejiho ramce.
         :param var_name: jmenno promenne
-        :return: promenna z prislusneho ramce
+        :return: list obsahujici typ a hodnotu promenne
         """
         frame, var = self.get_frame_var(var_name)
         if var not in frame.variables:
@@ -342,12 +342,13 @@ class Runtime:
         else:
             return frame.variables[var]
 
-    def check_value(self, type, value): # TODO neni ten type zbytecny???
+    def check_value(self, type, value):
         """
         Kontroluje hodnotu promenne podle jejiho typu.
+        Pokud je jineho typu, pokusi se ji prevest na pozadovany typ.
         :param type: typ promenne
-        :param value:
-        :return: hodnota promenne
+        :param value: hodnota promenne
+        :return: hodnota promenne ve pozadovanem typu
         """
         try:
             if type == "int":
@@ -381,7 +382,7 @@ class Runtime:
             else:  # tohle by se take nemelo stat, ale pro jistotu
                 error_exit(f"Nepodporovany typ '{type}'", err_internal_error)
         except ValueError:
-            error_exit(f"Argument '{value}' nemuze byt pouzity jako typ '{type}'", err_unexpected_struct)  # nebo err_wrong_operand_type ???
+            error_exit(f"Argument '{value}' nemuze byt pouzity jako typ '{type}'", err_unexpected_struct)
         return value
 
     def set_var(self, var_name, var_type, value):
@@ -414,9 +415,9 @@ class Runtime:
     def extract_args(arguments, count):
         """
         Vybere argumenty z instrukce.
-        :param arguments: argumenty
+        :param arguments: argumenty instrukce
         :param count: pocet argumentu
-        :return: tuple s extrahovanymi argumenty # TODO zmenit slovo extrahovany (zni to podivne)
+        :return: tuple s 'count' poctem paru [typ, hodnota]
         """
         extracted = []
         try:
@@ -430,10 +431,10 @@ class Runtime:
 
     def symbol_value(self, arg_type, arg):
         """
-        Zjisti a vrati hodnotu argumentu <symb>.
+        Zjisti a vrati typ a hodnotu argumentu <symb>.
         :param arg_type: typ argumentu
         :param arg: argument
-        :return: hodnota argumentu
+        :return: typ a hodnota argumentu
         """
         type = None
         value = None
@@ -518,12 +519,13 @@ class Runtime:
             self.max_initialized_variables = count
         return count
 
-    def get_operands(self, arguments, required_operands):  # TODO zjistit co tahle funkce poradne dela
+    def get_operands(self, arguments, required_operands):
         """
-        
-        :param arguments:
-        :param required_operands:
-        :return:
+        Nacte operandy instrukce, zkontroluje a prevede typy.
+        :param arguments: argumenty instrukce
+        :param required_operands: seznam pozadovanych operandu
+        :return: operandy instrukce, pokud jsou hodnoty promenne,
+        tak i zkontroluje spravnost jejich typu proti pozadovanym
         """
         arg_list = self.extract_args(arguments, len(required_operands))
         if len(arg_list) != len(required_operands) * 2:
@@ -540,7 +542,7 @@ class Runtime:
                 operands.extend(value_list)
             elif required in ['int', 'float', 'bool', 'string']:
                 value_list = self.symbol_value(arg_list[0], arg_list[1])
-                if required != value_list[0]:
+                if required != value_list[0]:  # kontrola spravneho typu
                     error_exit(f"Operand {arg_nr} musi byt typu '{required}'", err_wrong_operand_type)
                 operands.extend(value_list)
             elif required == 'intfloat':
@@ -554,21 +556,18 @@ class Runtime:
             arg_nr += 1
         return tuple(operands)
 
-    def get_operands_stack(self, required_operands):  # TODO zjistit co tahle funkce poradne dela
+    def get_operands_stack(self, required_operands):
         """
-
-        :param required_operands:
-        :return:
+        Nacte operandy instrukce ze zasobniku, zkontroluje a prevede typy.
+        :param required_operands: seznam pozadovanych operandu
+        :return: operandy instrukce, pokud jsou hodnoty promenne,
+        tak i zkontroluje spravnost jejich typu proti pozadovanym
         """
         operands = []
         arg_nr = 1
         for required in required_operands:
             arg_type, arg = self.stack.pop()
-            if required == 'var':
-                if arg_type != "var":
-                    error_exit(f"Argument {arg_nr} musi byt VAR!", err_wrong_operand_type)
-                operands.extend([arg_type, arg])
-            elif required == 'symb':
+            if required == 'symb':
                 value_list = self.symbol_value(arg_type, arg)
                 operands.extend(value_list)
             elif required in ['int', 'float', 'bool', 'string']:
