@@ -846,21 +846,30 @@ class Runtime:
         self.set_var(arg1, "bool", not value)
         self.inst_nr += 1
 
-    def do_LTS(self):  # TODO
+    def do_LTS(self):  # TODO Checknout, jestli je tento popis OK
+        """
+        Zasobnikova verze instrukce LT (mensi nez).
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
         self.stack.push(["bool", value2 < value3])
         self.inst_nr += 1
 
-    def do_GTS(self):  # TODO
+    def do_GTS(self):
+        """
+        Zasobnikova verze instrukce GT (vetsi nez).
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
         self.stack.push(["bool", value2 > value3])
         self.inst_nr += 1
 
-    def do_EQS(self):  # TODO
+    def do_EQS(self):
+        """
+        Zasobnikova verze instrukce EQ (ekvivalence).
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type and value2_type != "nil" and value3_type != "nil":
             error_exit("Oba operandy instrukce EQS musi byt typu stejného typu", err_wrong_operand_type)
@@ -870,29 +879,45 @@ class Runtime:
             self.stack.push(["bool", value2 == value3])
         self.inst_nr += 1
 
-    def do_ANDS(self):  # TODO
+    def do_ANDS(self):
+        """
+        Zasobnikova verze instrukce ADD (konjunkce).
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['bool', 'bool'])
         self.stack.push(["bool", value2 and value3])
         self.inst_nr += 1
 
-    def do_ORS(self):  # TODO
+    def do_ORS(self):
+        """
+        Zasobnikova verze instrukce OR (disjunkce).
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['bool', 'bool'])
         self.stack.push(["bool", value2 or value3])
         self.inst_nr += 1
 
-    def do_NOTS(self):  # TODO
+    def do_NOTS(self):
+        """
+        Zasobnikova verze instrukce NOT.
+        """
         value_type, value = self.get_operands_stack(['bool'])
         self.stack.push(["bool", not value])
         self.inst_nr += 1
 
-    def do_DIV(self):  # TODO
+    def do_DIV(self):
+        """
+        Vykona float instrukci DIV <var> <symb1> <symb2>. Spocita podil mezi <symb1> a <symb2> desetinnym cislem
+        a vysledek ulozi do <var>. Oba prvky <symb> musi byt typu flaot.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'float', 'float'))
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
         self.set_var(arg1, "float", value2 / value3)
         self.inst_nr += 1
 
-    def do_INT2FLOAT(self):  # TODO
+    def do_INT2FLOAT(self):
+        """
+        Provede float instrukci INT2FLOAT <var> <symb>. Prevede cele cislo <symb> na desetinne a ulozi jej do <var>.
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'int'))
         try:
             self.set_var(arg1, "float", float(value))
@@ -900,7 +925,11 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na FLOAT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_FLOAT2INT(self):  # TODO
+    def do_FLOAT2INT(self):
+        """
+        Provede float instrukci FLOAT2INT <var> <symb>. Prevede desetinne cislo typu float <symb> na cele
+        a ulozi jej do <var>.
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'float'))
         try:
             self.set_var(arg1, "int", int(value))
@@ -937,7 +966,10 @@ class Runtime:
             error_exit("Vyjimka pri prevodu CHAR na INT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_INT2FLOATS(self):  # TODO
+    def do_INT2FLOATS(self):  # TODO Checknout, jestli je to OK.
+        """
+        Provede zasobnikovou verzi float instrukce INT2FLOAT.
+        """
         value_type, value = self.get_operands_stack(['int'])
         try:
             self.stack.push(["float", float(value)])
@@ -945,7 +977,10 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na FLOAT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_FLOAT2INTS(self):  # TODO
+    def do_FLOAT2INTS(self):
+        """
+        Provede zasobnikovou verzi float instrukce FLOAT2INT.
+        """
         value_type, value = self.get_operands_stack(['float'])
         try:
             self.stack.push(["int", int(value)])
@@ -953,7 +988,10 @@ class Runtime:
             error_exit("Vyjimka pri prevodu FLOAT na INT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_INT2CHARS(self):  # TODO
+    def do_INT2CHARS(self):
+        """
+        Provede zasobnikovou verzi instrukce INT2CHAR.
+        """
         value_type, value = self.get_operands_stack(['int'])
         if value < 0 or value > 1114111:
             error_exit("Operand INT2CHARS musi byt INT v rozsahu 0-1114111!", err_wrong_string_operation)
@@ -963,7 +1001,10 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na CHAR string!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_STRI2INTS(self):  # TODO
+    def do_STRI2INTS(self):
+        """
+        Provede zasobnikovou verzi instrukce STRI2INT.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['int', 'string'])  # pozor stack = operandy v opacnem poradi
         if value3 < 0 or value3 > len(value2)-1:
             error_exit("Argument 2 musi byt INT v rozsahu 0 az delka retezce - 1!", err_wrong_string_operation)
@@ -1155,7 +1196,10 @@ class Runtime:
         except ValueError:
             error_exit("Navratova hodnota funkce EXIT musi byt cele cislo 0-49", err_wrong_operand_value)
 
-    def do_JUMPIFEQS(self):  # TODO
+    def do_JUMPIFEQS(self):  # TODO Check jestli je to takhle OK.
+        """
+        Provede zasobnikovou verzi float instrukce INT2FLOAT.
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         arg3_type, arg3 = self.stack.pop()
@@ -1165,7 +1209,10 @@ class Runtime:
         else:
             self.inst_nr += 1
 
-    def do_JUMPIFNEQS(self):  # TODO
+    def do_JUMPIFNEQS(self):
+        """
+        Provede zasobnikovou verzi float instrukce JUMPIFNEQ.
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         arg3_type, arg3 = self.stack.pop()
