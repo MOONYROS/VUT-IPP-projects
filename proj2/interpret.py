@@ -692,39 +692,57 @@ class Runtime:
         self.set_var(arg, value_type, value)
         self.inst_nr += 1
 
-    def do_CLEARS(self): # TODO zadna takova instrukce v seznamu neni
+    def do_CLEARS(self):
+        """
+        Smaze veskery obsah ze zasobniku.
+        """
         self.stack.clear()
         self.inst_nr += 1
 
-    def do_ADDS(self):  # TODO
+    def do_ADDS(self):  # TODO Check zapisu, jestli je OK.
+        """
+        Zasobnikova verze instrukce ADD.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce ADDS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 + value3])
         self.inst_nr += 1
 
-    def do_SUBS(self):  # TODO
+    def do_SUBS(self):
+        """
+        Zasobnikova verze instrukce SUB.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce SUBS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 - value3])
         self.inst_nr += 1
 
-    def do_MULS(self):  # TODO
+    def do_MULS(self):
+        """
+        Zasobnikova verze instrukce MUL.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce MULS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 * value3])
         self.inst_nr += 1
 
-    def do_DIVS(self):  # TODO
+    def do_DIVS(self):
+        """
+        Zasobnikova verze instrukce DIV.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['float', 'float'])
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
         self.stack.push(["float", value2 / value3])
         self.inst_nr += 1
 
-    def do_IDIVS(self):  # TODO
+    def do_IDIVS(self):
+        """
+        Zasobnikova verze instrukce IDIV.
+        """
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['int', 'int'])
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
