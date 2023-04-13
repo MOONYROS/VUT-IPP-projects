@@ -554,7 +554,12 @@ class Runtime:
             arg_nr += 1
         return tuple(operands)
 
-    def get_operands_stack(self, required_operands):
+    def get_operands_stack(self, required_operands):  # TODO zjistit co tahle funkce poradne dela
+        """
+
+        :param required_operands:
+        :return:
+        """
         operands = []
         arg_nr = 1
         for required in required_operands:
