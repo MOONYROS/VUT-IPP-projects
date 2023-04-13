@@ -200,10 +200,9 @@ class Stack:
             error_exit("Nelze delat pop z prazdneho zasobniku", err_missing_value)
         return self.stack.pop()
 
-    def clear(self):  # TODO overit si
+    def clear(self):
         """
         Vymaze vsechny prvky ze zasobniku.
-        :return: vyprazdneny zasobnik
         """
         self.stack.clear()
 
@@ -240,10 +239,10 @@ class FrameStack:
         """
         self.frames.append(frame)
 
-    def pop_frame(self):  # TODO co vraci???
+    def pop_frame(self):
         """
         Vybere ramec z vrcholu zasobniku ramcu.
-        :return:
+        :return: ramec z vrcholu zasobniku
         """
         return self.frames.pop()
 
@@ -699,7 +698,7 @@ class Runtime:
         self.stack.clear()
         self.inst_nr += 1
 
-    def do_ADDS(self):  # TODO Check zapisu, jestli je OK.
+    def do_ADDS(self):
         """
         Zasobnikova verze instrukce ADD.
         """
@@ -846,7 +845,7 @@ class Runtime:
         self.set_var(arg1, "bool", not value)
         self.inst_nr += 1
 
-    def do_LTS(self):  # TODO Checknout, jestli je tento popis OK
+    def do_LTS(self):
         """
         Zasobnikova verze instrukce LT (mensi nez).
         """
@@ -966,7 +965,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu CHAR na INT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_INT2FLOATS(self):  # TODO Checknout, jestli je to OK.
+    def do_INT2FLOATS(self):
         """
         Provede zasobnikovou verzi float instrukce INT2FLOAT.
         """
@@ -1196,9 +1195,9 @@ class Runtime:
         except ValueError:
             error_exit("Navratova hodnota funkce EXIT musi byt cele cislo 0-49", err_wrong_operand_value)
 
-    def do_JUMPIFEQS(self):  # TODO Check jestli je to takhle OK.
+    def do_JUMPIFEQS(self):
         """
-        Provede zasobnikovou verzi float instrukce INT2FLOAT.
+        Provede zasobnikovou verzi instrukce JUMPIFEQ.
         """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
@@ -1211,7 +1210,7 @@ class Runtime:
 
     def do_JUMPIFNEQS(self):
         """
-        Provede zasobnikovou verzi float instrukce JUMPIFNEQ.
+        Provede zasobnikovou verzi instrukce JUMPIFNEQ.
         """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
@@ -1244,14 +1243,19 @@ class Runtime:
         sys.stderr.write(f"Celkem vykonanych instrukci: {instructions}\n")
         self.inst_nr += 1
 
-    def run(self):  # TODO
+    def run(self):
+        """
+        Hlavni vykonna smycka programu.
+        :return:
+        """
         global act_order  # Cislo order ktery se zpracovava je v globalni promenne act_order, tam ho budeme menit
 
         for instruction in self.program:
             self.instruction_count[instruction['opcode']] += 1
+            # TODO pridat sem print instrukce
+            # print(instruction)
 
         keywords = list(instruction_operands.keys())
-
         function_map = {keyword: getattr(self, f"do_{keyword}") for keyword in keywords}
 
         while self.inst_nr < len(self.program):
@@ -1262,13 +1266,13 @@ class Runtime:
 
             # Uprava pocitadel do statistik
             self.instruction_exec[opcode] += 1
-            self.order_exec[instruction['order']] = self.order_exec.get(instruction['order'], 0) + 1
+            self.order_exec[act_order] = self.order_exec.get(instruction['order'], 0) + 1
 
             # Volani dopovidajicich funkci podle jmena instrukce
             if opcode in function_map:
                 function_map[opcode]()  # Vola do_OPCODE()
             else:
-                error_exit(f"Neznama intrukce '{opcode}'!", err_lex_synt)
+                error_exit(f"Neznama instrukce '{opcode}'!", err_lex_synt)
 
             # Spocitani incicializovanych promennych ve vsech ramcich
             self.count_initialized_variables()
