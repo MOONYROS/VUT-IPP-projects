@@ -185,14 +185,26 @@ class Stack:
         self.stack = deque()
 
     def push(self, item):
+        """
+        Vlozi prvek na zasobnik.
+        :param item: prvek, ktery se vlozi do zasobniku.
+        """
         self.stack.append(item)
 
     def pop(self):
+        """
+        Vybere prvek ze zasobniku.
+        :return: prvek z vrcholu zasobniku
+        """
         if len(self.stack) == 0:
             error_exit("Nelze delat pop z prazdneho zasobniku", err_missing_value)
         return self.stack.pop()
 
-    def clear(self):
+    def clear(self):  # TODO overit si
+        """
+        Vymaze vsechny prvky ze zasobniku.
+        :return: vyprazdneny zasobnik
+        """
         self.stack.clear()
 
     def __repr__(self):
@@ -206,6 +218,9 @@ class Frame:
         self.is_initialized = is_init
 
     def check_initialized(self):
+        """
+        Funkce kontroluje, jestli je ramec inicializovany, pripadne vyvola chybu.
+        """
         if not self.is_initialized:
             error_exit("Ramec neexistuje", err_frame_not_exist)
 
@@ -219,12 +234,24 @@ class FrameStack:
         self.frames = deque()
 
     def push_frame(self, frame):
+        """
+        Ulozi ramec na zasobnik ramcu.
+        :param frame: ramec, ktery se bude ukladat na zasobnik
+        """
         self.frames.append(frame)
 
-    def pop_frame(self):
+    def pop_frame(self):  # TODO co vraci???
+        """
+        Vybere ramec z vrcholu zasobniku ramcu.
+        :return:
+        """
         return self.frames.pop()
 
     def is_empty(self):
+        """
+        Kontroluje, jestli je zasobnik ramcu prazdny.
+        :return: 1 pokud je zasobnik prazdny, jinak vraci 0
+        """
         return len(self.frames) == 0
 
     def __repr__(self):
@@ -594,11 +621,17 @@ class Runtime:
         self.inst_nr += 1
 
     def do_CREATEFRAME(self):
+        """
+        Vykona instrukci CREATEFRAME.
+        """
         self.TF.variables.clear()
         self.TF.is_initialized = True
         self.inst_nr += 1
 
     def do_PUSHFRAME(self):
+        """
+        Vykona instrukci PUSHFRAME.
+        """
         if not self.TF.is_initialized:
             error_exit("Ramec TF neni incializovany, nelze provest PUSHFRAME", err_frame_not_exist)
         self.frame_stack.push_frame(self.TF)
@@ -607,6 +640,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_POPFRAME(self):
+        """
+        Vykona instrukci POPFRAME.
+        """
         if self.frame_stack.is_empty():
             error_exit("Zasobnik ramcu je prazdny, nelze provest POPFRAME", err_frame_not_exist)
         self.TF = self.frame_stack.pop_frame()
@@ -617,63 +653,78 @@ class Runtime:
         self.inst_nr += 1
 
     def do_DEFVAR(self):
+        """
+        Vykona instrukci DEFVAR <var>.
+        """
         arg_type, arg = self.get_operands(self.arguments, ['var'])
         self.define_var(arg)
         self.inst_nr += 1
 
     def do_CALL(self):
+        """
+        Vykona instrukci CALL <label>.
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         self.call_stack.push(self.inst_nr+1)
         self.inst_nr = int(self.labels[arg])
 
     def do_RETURN(self):
+        """
+        Vykona instrukci RETURN.
+        """
         self.inst_nr = self.call_stack.pop()
 
     def do_PUSHS(self):
+        """
+        Vykona zasobnikovou instrukci PUSHS <symb>.
+        """
         value_type, value = self.get_operands(self.arguments, ['symb'])
         self.stack.push([value_type, value])
         self.inst_nr += 1
 
     def do_POPS(self):
+        """
+        Vykona zasobnikovou instrukci POPS <var>.
+        """
         arg_type, arg = self.get_operands(self.arguments, ['var'])
         value_type, value = self.stack.pop()
         self.set_var(arg, value_type, value)
         self.inst_nr += 1
 
-    def do_CLEARS(self):
+    def do_CLEARS(self): # TODO zadna takova instrukce v seznamu neni
         self.stack.clear()
         self.inst_nr += 1
 
-    def do_ADDS(self):
+    def do_ADDS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce ADDS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 + value3])
         self.inst_nr += 1
 
-    def do_SUBS(self):
+    def do_SUBS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce SUBS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 - value3])
         self.inst_nr += 1
 
-    def do_MULS(self):
+    def do_MULS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['intfloat', 'intfloat'])
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce MULS musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
         self.stack.push([value2_type, value2 * value3])
         self.inst_nr += 1
 
-    def do_DIVS(self):
+    def do_DIVS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['float', 'float'])
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
         self.stack.push(["float", value2 / value3])
         self.inst_nr += 1
 
-    def do_IDIVS(self):
+    def do_IDIVS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['int', 'int'])
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
@@ -681,6 +732,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_ADD(self):
+        """
+        Vykona instrukci ADD <var> <symb1> <symb2> (soucet).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'intfloat', 'intfloat'))
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce ADD musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
@@ -688,6 +742,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_SUB(self):
+        """
+        Vykona instrukci SUB <var> <symb1> <symb2> (rozdil).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'intfloat', 'intfloat'))
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce SUB musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
@@ -695,6 +752,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_MUL(self):
+        """
+        Vykona instrukci MUL <var> <symb1> <symb2> (soucin).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'intfloat', 'intfloat'))
         if value2_type != value3_type:
             error_exit("Oba operandy instrukce MUL musi byt stejneho typu 'int' nebo 'float'", err_wrong_operand_type)
@@ -702,6 +762,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_IDIV(self):
+        """
+        Vykona instrukci IDIV <var> <symb1> <symb2> (celociselny podil).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'int', 'int'))
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
@@ -709,6 +772,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_LT(self):
+        """
+        Vykona instrukci LT <var> <symb1> <symb2> (mensi nez). Vysledek je typu bool.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'symb', 'symb'))
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
@@ -716,6 +782,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_GT(self):
+        """
+        Vykona instrukci GT <var> <symb1> <symb2> (vetsi nez). Vysledek je typu bool.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'symb', 'symb'))
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
@@ -723,6 +792,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_EQ(self):
+        """
+        Vykona instrukci EQ <var> <symb1> <symb2> (ekvivalence). Vysledek je typu bool.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'symb', 'symb'))
         if value2_type != value3_type and value2_type != "nil" and value3_type != "nil":
             error_exit("Oba operandy instrukce EQ musi byt typu stejného typu", err_wrong_operand_type)
@@ -733,35 +805,44 @@ class Runtime:
         self.inst_nr += 1
 
     def do_AND(self):
+        """
+        Vykona instrukci AND <var> <symb1> <symb2> (konjunkce). Vysledek je typu bool.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'bool', 'bool'))
         self.set_var(arg1, "bool", value2 and value3)
         self.inst_nr += 1
 
     def do_OR(self):
+        """
+        Vykona instrukci OR <var> <symb1> <symb2> (disjunkce). Vysledek je typu bool.
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'bool', 'bool'))
         self.set_var(arg1, "bool", value2 or value3)
         self.inst_nr += 1
 
     def do_NOT(self):
+        """
+        Vykona instrukci NOT <var> <symb1> <symb2> (negace). Vysledek je typu bool.
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'bool'))
         self.set_var(arg1, "bool", not value)
         self.inst_nr += 1
 
-    def do_LTS(self):
+    def do_LTS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
         self.stack.push(["bool", value2 < value3])
         self.inst_nr += 1
 
-    def do_GTS(self):
+    def do_GTS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type or value2_type == "nil" or value3_type == "nil":
             error_exit("Oba operandy instrukce GTS musi byt typu stejného typu a nesmi byt nil", err_wrong_operand_type)
         self.stack.push(["bool", value2 > value3])
         self.inst_nr += 1
 
-    def do_EQS(self):
+    def do_EQS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['symb', 'symb'])
         if value2_type != value3_type and value2_type != "nil" and value3_type != "nil":
             error_exit("Oba operandy instrukce EQS musi byt typu stejného typu", err_wrong_operand_type)
@@ -771,29 +852,29 @@ class Runtime:
             self.stack.push(["bool", value2 == value3])
         self.inst_nr += 1
 
-    def do_ANDS(self):
+    def do_ANDS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['bool', 'bool'])
         self.stack.push(["bool", value2 and value3])
         self.inst_nr += 1
 
-    def do_ORS(self):
+    def do_ORS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['bool', 'bool'])
         self.stack.push(["bool", value2 or value3])
         self.inst_nr += 1
 
-    def do_NOTS(self):
+    def do_NOTS(self):  # TODO
         value_type, value = self.get_operands_stack(['bool'])
         self.stack.push(["bool", not value])
         self.inst_nr += 1
 
-    def do_DIV(self):
+    def do_DIV(self):  # TODO
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'float', 'float'))
         if value3 == 0:
             error_exit("Nelze delit nulou", err_wrong_operand_value)
         self.set_var(arg1, "float", value2 / value3)
         self.inst_nr += 1
 
-    def do_INT2FLOAT(self):
+    def do_INT2FLOAT(self):  # TODO
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'int'))
         try:
             self.set_var(arg1, "float", float(value))
@@ -801,7 +882,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na FLOAT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_FLOAT2INT(self):
+    def do_FLOAT2INT(self):  # TODO
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'float'))
         try:
             self.set_var(arg1, "int", int(value))
@@ -810,6 +891,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_INT2CHAR(self):
+        """
+        Provede instrukci INT2CHAR <var> <symb> (prevod ciselne hodnoty na znak).
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'int'))
         if value < 0 or value > 1114111:
             error_exit("Argument 2 musi byt INT v rozsahu 0-1114111!", err_wrong_string_operation)
@@ -820,6 +904,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_STRI2INT(self):
+        """
+        Provede instrukci STRI2INT <var> <symb1> <symb2> (do <var> se ulozi hodnota znaku v <symb1> na pozici <symb2>).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'string', 'int'))
         if value3 < 0 or value3 > len(value2)-1:
             error_exit("Argument 2 musi byt INT v rozsahu 0 az delka retezce - 1!", err_wrong_string_operation)
@@ -832,7 +919,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu CHAR na INT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_INT2FLOATS(self):
+    def do_INT2FLOATS(self):  # TODO
         value_type, value = self.get_operands_stack(['int'])
         try:
             self.stack.push(["float", float(value)])
@@ -840,7 +927,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na FLOAT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_FLOAT2INTS(self):
+    def do_FLOAT2INTS(self):  # TODO
         value_type, value = self.get_operands_stack(['float'])
         try:
             self.stack.push(["int", int(value)])
@@ -848,7 +935,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu FLOAT na INT!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_INT2CHARS(self):
+    def do_INT2CHARS(self):  # TODO
         value_type, value = self.get_operands_stack(['int'])
         if value < 0 or value > 1114111:
             error_exit("Operand INT2CHARS musi byt INT v rozsahu 0-1114111!", err_wrong_string_operation)
@@ -858,7 +945,7 @@ class Runtime:
             error_exit("Vyjimka pri prevodu INT na CHAR string!", err_wrong_string_operation)
         self.inst_nr += 1
 
-    def do_STRI2INTS(self):
+    def do_STRI2INTS(self):  # TODO
         value3_type, value3, value2_type, value2 = self.get_operands_stack(['int', 'string'])  # pozor stack = operandy v opacnem poradi
         if value3 < 0 or value3 > len(value2)-1:
             error_exit("Argument 2 musi byt INT v rozsahu 0 az delka retezce - 1!", err_wrong_string_operation)
@@ -872,6 +959,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_READ(self):
+        """
+        Vykona instrukci READ <var> <type> (nacteni hodnoty typu <type> ze stdin do <var>).
+        """
         arg1_type, arg1, arg2_type, arg2 = self.extract_args(self.arguments, 2)
         if arg1_type != "var":
             error_exit("Argument 1 musi byt VAR!", err_wrong_operand_type)
@@ -923,16 +1013,25 @@ class Runtime:
         self.inst_nr += 1
 
     def do_WRITE(self):
+        """
+        Vykona instrukci WRITE <symb> (vypise hodnotu <symb> na stdout).
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         print(self.symbol_to_str(arg_type, arg), end='')
         self.inst_nr += 1
 
     def do_CONCAT(self):
+        """
+        Vykona instrukci CONCAT <var> <symb1> <symb2> (konkatenace <symb1> se <symb2> a ulozeni do <var>).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'string', 'string'))
         self.set_var(arg1, "string", value2 + value3)
         self.inst_nr += 1
 
     def do_STRLEN(self):
+        """
+        Vykona instrukci STRLEN <var> <symb> (spocita delku retezce v <symb> a ulozi ji do <var>).
+        """
         arg1_type, arg1, value_type, value = self.get_operands(self.arguments, ('var', 'string'))
         try:
             self.set_var(arg1, "int", len(value))
@@ -941,6 +1040,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_GETCHAR(self):
+        """
+        Vykona instrukci GETCHAR <var> <symb1> <symb2> (do <var> ulozi znak ze <symb1> na pozici <symb2>).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'string', 'int'))
         if value3 < 0 or value3 > len(value2)-1:
             error_exit("Argument 3 musi byt v rozsahu delky retece Argument 2", err_wrong_string_operation)
@@ -948,6 +1050,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_SETCHAR(self):
+        """
+        Vykona instrukci SETCHAR <var> <symb1> <symb2> (zmeni znak retezce ve <var> na znak ze <symb1>, pozice <symb2>).
+        """
         arg1_type, arg1, value2_type, value2, value3_type, value3 = self.get_operands(self.arguments, ('var', 'int', 'string'))
         value1_type, value1 = self.symbol_value(arg1_type, arg1)
         if value1_type != "string":
@@ -961,6 +1066,9 @@ class Runtime:
         self.inst_nr += 1
 
     def do_TYPE(self):
+        """
+        Vykona instrukci TYPE <var> <symb> (do <var> ulozi typ <symb> formou retezce).
+        """
         arg1_type, arg1, arg2_type, arg2 = self.extract_args(self.arguments, 2)
         if arg1_type != "var":
             error_exit("Argument 1 musi byt VAR!", err_wrong_operand_type)
@@ -977,14 +1085,24 @@ class Runtime:
         self.inst_nr += 1
 
     def do_LABEL(self):
+        """
+        Instrukce LABEL <label>. Vytvori v programu cil <label>, na ktery provest skok skokove instrukce.
+        """
         self.inst_nr += 1
 
     def do_JUMP(self):
+        """
+        Vykona instrukci JUMP <label>. Provede nepodmineny skok na navesti
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         self.inst_nr = int(self.labels[arg])
 
     def do_JUMPIFEQ(self):
+        """
+        Vykona instrukci JUMPIFEQ <label> <symb1> <symb2>. Provede skok na navesti label,
+        pokud jsou si <symb1> a <symb2> rovny.
+        """
         arg1_type, arg1, arg2_type, arg2, arg3_type, arg3 = self.extract_args(self.arguments, 3)
         self.check_label(arg1_type, arg1)
         if self.symbol_eq(arg2_type, arg2, arg3_type, arg3):
@@ -993,6 +1111,10 @@ class Runtime:
             self.inst_nr += 1
 
     def do_JUMPIFNEQ(self):
+        """
+        Vykona instrukci JUMPIFNEQ <label> <symb1> <symb2>. Provede skok na navesti label,
+        pokud si hodnoty <symb1> a <symb2> nejsou rovny.
+        """
         arg1_type, arg1, arg2_type, arg2, arg3_type, arg3 = self.extract_args(self.arguments, 3)
         self.check_label(arg1_type, arg1)
         if not self.symbol_eq(arg2_type, arg2, arg3_type, arg3):
@@ -1001,6 +1123,9 @@ class Runtime:
             self.inst_nr += 1
 
     def do_EXIT(self):
+        """
+        Provede instrukci EXIT <symb>. Ukonci vykonavani programu s navratovym kodem <symb>.
+        """
         value_type, value = self.get_operands(self.arguments, ['int'])
         try:
             if 0 <= int(value) <= 49:
@@ -1012,7 +1137,7 @@ class Runtime:
         except ValueError:
             error_exit("Navratova hodnota funkce EXIT musi byt cele cislo 0-49", err_wrong_operand_value)
 
-    def do_JUMPIFEQS(self):
+    def do_JUMPIFEQS(self):  # TODO
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         arg3_type, arg3 = self.stack.pop()
@@ -1022,7 +1147,7 @@ class Runtime:
         else:
             self.inst_nr += 1
 
-    def do_JUMPIFNEQS(self):
+    def do_JUMPIFNEQS(self):  # TODO
         arg_type, arg = self.extract_args(self.arguments, 1)
         self.check_label(arg_type, arg)
         arg3_type, arg3 = self.stack.pop()
@@ -1033,11 +1158,18 @@ class Runtime:
             self.inst_nr += 1
 
     def do_DPRINT(self):
+        """
+        Provede instrukci DPRINT <symb>. Vypise <symb> na stderr.
+        """
         arg_type, arg = self.extract_args(self.arguments, 1)
         sys.stderr.write(self.symbol_to_str(arg_type, arg))
         self.inst_nr += 1
 
     def do_BREAK(self):
+        """
+        Provede instrukci BREAK. Vypise stav interpretu na stderr (napr pozice v kodu, obsah ramcu, ...) v dobe
+        vykonavani teto instrukce.
+        """
         instruction = self.program[self.inst_nr]
         sys.stderr.write(f"Vykonavam instukci: {instruction}\n")
         sys.stderr.write(f"GF frame: {self.GF} {self.GF.is_initialized}\n")
@@ -1047,7 +1179,7 @@ class Runtime:
         sys.stderr.write(f"Celkem vykonanych instrukci: {instructions}\n")
         self.inst_nr += 1
 
-    def run(self):
+    def run(self):  # TODO
         global act_order  # Cislo order ktery se zpracovava je v globalni promenne act_order, tam ho budeme menit
 
         for instruction in self.program:
@@ -1077,7 +1209,7 @@ class Runtime:
             self.count_initialized_variables()
 
 
-def write_stats_file(stats_file, runtime):
+def write_stats_file(stats_file, runtime):  # TODO
     for arg in sys.argv:
         # print( arg[:5] )
         if arg[:7] == '--insts':
@@ -1135,7 +1267,7 @@ def show_help():
     print("    --eol        (Volitelne) Vypise odradkovani")
 
 
-def main(args):
+def main(args):  # TODO
     if args.help:
         show_help()
         return
