@@ -1253,7 +1253,8 @@ class Runtime:
 
         for instruction in self.program:
             self.instruction_count[instruction['opcode']] += 1
-            # TODO pridat sem print instrukce
+
+            # Pro zobrazeni struktury instrukce odkomentujte nasledujici radek
             # print(instruction)
 
         keywords = list(instruction_operands.keys())
