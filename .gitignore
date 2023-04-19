@@ -139,3 +139,7 @@ proj1/tests/
 proj1/IPP23_parser*
 proj1/test.php
 proj1/*.zip
+
+proj2/*.out
+proj2/*.src
+proj2/*.txt
