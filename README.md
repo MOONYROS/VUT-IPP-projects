@@ -10,7 +10,7 @@ First task was to parse instructions from *stdin*, do a lexical and a slight syn
 For further information, please see the project documentation in `proj1/readme1.pdf`. Note that the documentation is in Czech language only.
 
 Second task was aimed to get that *XML file* from the first one, process the information and write the results of the program onto the *stdout* while using `Python 3`.
-To know more about the functionality of this projects, please see the documentation in `proj2/readme2.pdf`.
+To know more about the functionality of this projects, please see the documentation in `proj2/readme2.pdf`. Please note that the documentation is in Czech language only.
 
 ### Testing
 
@@ -26,6 +26,15 @@ Project 2 was tested with following `Python` versions:
 - Python 3.9
 
 ## Project 1 detailed evaluation
+
+- Lexical analysis (error detection): 97%
+- Syntax analysis (error detection): 91%
+- Instruction processing (including errors): 100%
+- Complex program processing: 92%
+
+* STATP bonus: 0%
+
+- **Overall score** (without bonuses): 96%
 
 ## Project 2 detailed evaluation
 
