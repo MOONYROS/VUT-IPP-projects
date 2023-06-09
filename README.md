@@ -37,9 +37,9 @@ Project 2 was tested with following `Python` versions:
 - Interpretation of complex programs: 100%
 - Command line options: 70%
 
-- FLOAT bonus: 100%
-- STACK bonus: 100%
-- STATI bonus: 80%
+* FLOAT bonus: 100%
+* STACK bonus: 100%
+* STATI bonus: 80%
 
 - **Overall score** (without bonuses): 98%
 
